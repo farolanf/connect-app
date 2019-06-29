@@ -3,24 +3,29 @@ import React from 'react'
 import { Prompt, withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 import update from 'react-addons-update'
-import MessageList from '../../../components/MessageList/MessageList'
+import CardListHeader from '../components/CardListHeader/CardListHeader'
+import TopicCard from '../components/TopicCard/TopicCard'
 import MessagingEmptyState from '../../../components/MessageList/MessagingEmptyState'
-import MessageDetails from '../../../components/MessageDetails/MessageDetails'
 import NewPost from '../../../components/Feed/NewPost'
 import { loadProjectMessages, createProjectTopic, saveProjectTopic, deleteProjectTopic, loadFeedComments, addFeedComment, saveFeedComment, deleteFeedComment, getFeedComment } from '../../actions/projectTopics'
 import spinnerWhileLoading from '../../../components/LoadingSpinner'
-import FullHeightContainer from 'appirio-tech-react-components/components/FullHeightContainer/FullHeightContainer'
-import FooterV2 from '../../../components/FooterV2/FooterV2'
+import TwoColsLayout from '../../../components/TwoColsLayout'
+
+import { checkPermission } from '../../../helpers/permissions'
+import PERMISSIONS from '../../../config/permissions'
 
 import {
   THREAD_MESSAGES_PAGE_SIZE,
   PROJECT_FEED_TYPE_MESSAGES,
+  PROJECT_FEED_TYPE_PRIMARY,
   DISCOURSE_BOT_USERID,
   CODER_BOT_USERID,
   CODER_BOT_USER_FNAME,
   CODER_BOT_USER_LNAME,
   TC_SYSTEM_USERID
 } from '../../../config/constants'
+
+import './MessagesContainer.scss'
 
 const SYSTEM_USER = {
   firstName: CODER_BOT_USER_FNAME,
@@ -44,12 +49,11 @@ class MessagesView extends React.Component {
     this.onShowAllComments = this.onShowAllComments.bind(this)
     this.onAddNewMessage = this.onAddNewMessage.bind(this)
     this.onNewMessageChange = this.onNewMessageChange.bind(this)
-    this.onNewThread = this.onNewThread.bind(this)
+    this.onNewPost = this.onNewPost.bind(this)
     this.onLeave = this.onLeave.bind(this)
     this.isChanged = this.isChanged.bind(this)
     this.onNewPostChange = this.onNewPostChange.bind(this)
     this.changeThread = this.changeThread.bind(this)
-    this.onNewThreadClick = this.onNewThreadClick.bind(this)
     this.showNewThreadForm = this.showNewThreadForm.bind(this)
     this.onEditMessage = this.onEditMessage.bind(this)
     this.onSaveMessageChange = this.onSaveMessageChange.bind(this)
@@ -207,6 +211,13 @@ class MessagesView extends React.Component {
     })
   }
 
+  getPhotoUrl(thread) {
+    const { allMembers } = this.props
+    if (allMembers) {
+      const user = allMembers[thread.user.userId]
+      return user.photoURL
+    }
+  }
 
   onShowAllComments(theadId) {
     const { threads } = this.props
@@ -271,7 +282,7 @@ class MessagesView extends React.Component {
         return item
       })
     }, () => {
-      this.props.history.push(`/projects/${this.props.project.id}/discussions/${thread.id}`)
+      this.props.history.push(`/projects/${this.props.project.id}/messages/${thread.id}`)
     })
   }
 
@@ -279,18 +290,6 @@ class MessagesView extends React.Component {
     this.setState({
       newPost: {title, content}
     })
-  }
-
-  onNewThreadClick() {
-    const unsavedContentMsg = this.onLeave({})
-    if (unsavedContentMsg) {
-      const changeConfirmed = confirm(unsavedContentMsg)
-      if (changeConfirmed) {
-        this.showNewThreadForm()
-      }
-    } else {
-      this.showNewThreadForm()
-    }
   }
 
   showNewThreadForm() {
@@ -400,94 +399,73 @@ class MessagesView extends React.Component {
     this.props.deleteProjectTopic(threadId, PROJECT_FEED_TYPE_MESSAGES)
   }
 
-  onNewThread({title, content, attachmentIds}) {
+  onNewPost({title, content, isPrivate = false, attachmentIds}) {
     const { project } = this.props
-    const newThread = {
+    const newFeed = {
       title,
       body: content,
-      tag: PROJECT_FEED_TYPE_MESSAGES
+      tag: isPrivate ? PROJECT_FEED_TYPE_MESSAGES : PROJECT_FEED_TYPE_PRIMARY
     }
     if (attachmentIds) {
-      Object.assign(newThread, { attachmentIds })
+      Object.assign(newFeed, { attachmentIds })
     }
-    this.props.createProjectTopic(project.id, newThread).then(() => {
-      this.setState({
-        isCreateNewMessage : false
-      })
-    })
+    this.props.createProjectTopic(project.id, newFeed)
   }
 
   render() {
-    const {threads, isCreateNewMessage, showEmptyState, scrollPosition} = this.state
-    const { currentUser, isCreatingFeed, currentMemberRole, error } = this.props
-    const activeThread = threads.filter((item) => item.isActive)[0]
+    const {threads, showEmptyState} = this.state
+    const { currentUser, isCreatingFeed, currentMemberRole, allMembers, projectMembers, canAccessPrivatePosts, error } = this.props
     const onLeaveMessage = this.onLeave() || ''
-    const renderRightPanel = () => {
-      if (!!currentMemberRole && (isCreateNewMessage || !threads.length)) {
-        return (
-          <NewPost
-            currentUser={currentUser}
-            onPost={this.onNewThread}
-            onNewPostChange={this.onNewPostChange}
-            isCreating={isCreatingFeed}
-            hasError={error}
-            heading="New Discussion Post"
-            titlePlaceholder="Start a new discussion topic with the team"
-          />
-        )
-      } else if (activeThread) {
-        return (
-          <MessageDetails
-            {...activeThread}
-            allowAddingComment={activeThread.allowComments && !!currentMemberRole}
-            onLoadMoreMessages={this.onShowAllComments.bind(this, activeThread.id)}
-            onNewMessageChange={this.onNewMessageChange}
-            onAddNewMessage={this.onAddNewMessage.bind(this, activeThread.id)}
-            currentUser={currentUser}
-            onEditMessage={this.onEditMessage.bind(this, activeThread.id)}
-            onSaveMessageChange={this.onSaveMessageChange.bind(this, activeThread.id)}
-            onSaveMessage={this.onSaveMessage.bind(this, activeThread.id)}
-            onDeleteMessage={this.onDeleteMessage.bind(this, activeThread.id)}
-            onEditTopic={this.onEditTopic.bind(this, activeThread.id)}
-            onTopicChange={this.onTopicChange.bind(this, activeThread.id)}
-            onSaveTopic={this.onSaveTopic.bind(this, activeThread.id)}
-            onDeleteTopic={this.onDeleteTopic.bind(this, activeThread.id)}
-          />
-        )
-      } else {
-        // TODO show some placeholder card
-      }
-    }
 
+    console.log('members', allMembers)
+    console.log('threads', threads)
+    console.log('notifications', this.props.notifications)
+  
     return (
-      <FullHeightContainer offset={80}>
+      <TwoColsLayout>
         <Prompt
           when={!!onLeaveMessage}
           message={onLeaveMessage}
         />
-        <div className="messages-container">
-          <div className="left-area">
-            <MessageList
-              onAdd={this.onNewThreadClick}
-              threads={threads}
-              onSelect={this.onThreadSelect}
-              showAddButton={!!currentMemberRole}
-              showEmptyState={showEmptyState && !threads.length}
-              scrollPosition={scrollPosition}
-            />
-            <FooterV2 />
-          </div>
-          <div className="right-area">
-            { (showEmptyState && !threads.length) &&
+
+        <TwoColsLayout.Sidebar>
+        </TwoColsLayout.Sidebar>
+        
+        <TwoColsLayout.Content>
+          <div styleName="content">
+            { (false && showEmptyState && !threads.length) &&
                 <MessagingEmptyState
                   currentUser={currentUser}
                   onClose={() => this.setState({showEmptyState: false})}
                 />
             }
-            { renderRightPanel() }
+            {!!currentMemberRole && (
+              <NewPost
+                currentUser={currentUser}
+                allMembers={allMembers}
+                projectMembers={projectMembers}
+                onPost={this.onNewPost}
+                isCreating={isCreatingFeed}
+                hasError={error}
+                heading="NEW STATUS POST"
+                onNewPostChange={this.onNewPostChange}
+                titlePlaceholder="Start a new discussion"
+                expandedTitlePlaceholder="Add your discussion title"
+                contentPlaceholder="Add your first post"
+                canAccessPrivatePosts={canAccessPrivatePosts}
+              />
+            )}
+            <CardListHeader title="New Messages" />
+            {threads.map(thread => (
+              <TopicCard key={thread.id} variant="new-message" title={thread.title} avatarUrl={this.getPhotoUrl(thread)} newMsgCount={Math.floor(Math.random() * 100)} fileCount={Math.floor(Math.random() * 100)} linkCount={Math.floor(Math.random() * 100)} isPrivate={Math.random() > 0.5} />
+            ))}
+            <CardListHeader title="Earlier Messages" />
+            {threads.map(thread => (
+              <TopicCard key={thread.id} title={thread.title} avatarUrl={this.getPhotoUrl(thread)} fileCount={Math.floor(Math.random() * 100)} linkCount={Math.floor(Math.random() * 100)} isPrivate={Math.random() > 0.5} />
+            ))}
           </div>
-        </div>
-      </FullHeightContainer>
+        </TwoColsLayout.Content>
+      </TwoColsLayout>
     )
   }
 }
@@ -507,15 +485,28 @@ class MessagesContainer extends React.Component {
   }
 }
 
-const mapStateToProps = ({ projectTopics, members, loadUser }) => {
+const mapStateToProps = ({ projectTopics, notifications, members, loadUser, projectState }) => {
+  const project = projectState.project
+  const projectMembersMap = _.keyBy(project.members, 'userId')
+  const projectMembers = Object.values(members.members) 
+    .filter(m => projectMembersMap.hasOwnProperty(m.userId))
+    .map(m => ({
+      ...m,
+      role:projectMembersMap[m.userId].role
+    }))
+  // all feeds includes primary as well as private topics if user has access to private topics
+  const canAccessPrivatePosts = checkPermission(PERMISSIONS.ACCESS_PRIVATE_POST)
   return {
     currentUser: loadUser.user,
+    notifications,
     threads    : projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].topics,
     threadTotalCount : projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].totalCount,
     isCreatingFeed : projectTopics.isCreatingFeed,
     isLoading  : projectTopics.isLoading,
     error      : projectTopics.error,
-    allMembers : members.members
+    allMembers : members.members,
+    projectMembers : _.keyBy(projectMembers, 'userId'),
+    canAccessPrivatePosts
   }
 }
 const mapDispatchToProps = {

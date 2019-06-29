@@ -24,12 +24,13 @@ const FileDownloadWithAuth = requiresAuthentication(FileDownload)
 const ProjectDetailWithAuth = withProps({ main:
   <Switch>
     <Route exact path="/projects/:projectId" render={() => <ProjectDetail component={Dashboard} />} />
+    <Route path="/projects/:projectId/messages/:topicId" render={() => <ProjectDetail component={ProjectMessages} />} />
+    <Route path="/projects/:projectId/messages" render={() => <ProjectDetail component={ProjectMessages} />} />
     <Route path="/projects/:projectId/status/:statusId" render={() => <ProjectDetail component={Dashboard} />} />
     <Route path="/projects/:projectId/specification" render={() => <ProjectDetail component={SpecificationContainer} />} />
     <Route path="/projects/:projectId/scope" render={() => <ProjectDetail component={Scope} />} />
     <Route path="/projects/:projectId/plan" render={() => <ProjectDetail component={ProjectPlan} />} />
     <Route path="/projects/:projectId/add-phase" render={() => <ProjectDetail component={ProjectAddPhaseContainer} />} />
-    <Route path="/projects/:projectId/discussions/:discussionId?" render={() => <ProjectDetail component={ProjectMessages} />} />
     <Route render={() => <CoderBot code={404}/>} />
   </Switch>
 })(ProjectLayoutWithAuth)

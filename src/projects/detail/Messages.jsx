@@ -1,9 +1,6 @@
 import React from 'react'
 import MessagesContainer from './containers/MessagesContainer'
 
-
-require('./Messages.scss')
-
 const Messages = ({ location, project, currentMemberRole, route, params }) => (
   <MessagesContainer
     location={ location }
