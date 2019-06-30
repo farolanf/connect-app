@@ -114,7 +114,7 @@ class MessagesContainer extends React.Component {
     const hasThread = (newPost.title && !!newPost.title.trim().length) || ( newPost.content && !!newPost.content.trim().length)
     return hasThread || hasComment
   }
-  
+
   init(props, prevProps) {
     const { match, feeds } = props
 
@@ -401,7 +401,7 @@ class MessagesContainer extends React.Component {
       notifications,
       isFeedsLoading
     } = this.props
-    
+
     const { feed } = this.state
 
     // system notifications
@@ -452,7 +452,6 @@ class MessagesContainer extends React.Component {
           {feed && (
             <MessagesDrawer
               open={this.state.open}
-              zDepth={15}
               containerStyle={{top: '110px', height: 'calc(100% - 110px)', display: 'flex', flexDirection: 'column' }}
               overlayStyle={{top: '110px', left: '360px'}}
               onRequestChange={this.toggleDrawer}
@@ -498,7 +497,7 @@ const mapStateToProps = ({ notifications, projectState, projectTopics, members, 
 
   const project = projectState.project
   const projectMembersMap = _.keyBy(project.members, 'userId')
-  let projectMembers = Object.values(allMembers) 
+  let projectMembers = Object.values(allMembers)
     .filter(m => projectMembersMap.hasOwnProperty(m.userId))
     .map(m => ({
       ...m,

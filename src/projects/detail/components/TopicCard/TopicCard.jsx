@@ -75,8 +75,8 @@ TopicCard.propTypes = {
   // Latest message date if variant === 'message'.
   // Earliest date of new messages if variant === 'new-message'.
   date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
-  
-  fileCount: PropTypes.number, 
+
+  fileCount: PropTypes.number,
   linkCount: PropTypes.number,
   isPrivate: PropTypes.bool
 }

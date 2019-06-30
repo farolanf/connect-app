@@ -33,7 +33,7 @@ import PERMISSIONS from '../../../config/permissions'
 
 import { sortFeedByNewestMsg } from '../../../helpers/feeds'
 
-import './FeedContainer.scss'
+import './MessagesFeedContainer.scss'
 
 const isPrivateFeed = feed => feed.tag === PROJECT_FEED_TYPE_MESSAGES
 
@@ -150,7 +150,7 @@ class FeedView extends React.Component {
         EVENT_TYPE.POST.UPDATED,
         EVENT_TYPE.POST.MENTION,
         EVENT_TYPE.TOPIC.CREATED
-      ].includes(notification.eventType)    
+      ].includes(notification.eventType)
   }
 
   hasNewMsg(feed) {
@@ -331,7 +331,7 @@ class FeedView extends React.Component {
 const enhance = spinnerWhileLoading(props => !props.isLoading)
 const EnhancedFeedView = enhance(FeedView)
 
-class FeedContainer extends React.Component {
+class MessagesFeedContainer extends React.Component {
   constructor(props) {
     super(props)
   }
@@ -351,7 +351,7 @@ class FeedContainer extends React.Component {
   }
 }
 
-FeedContainer.PropTypes = {
+MessagesFeedContainer.PropTypes = {
   currentMemberRole: PropTypes.string,
   project: PropTypes.object.isRequired,
   canAccessPrivatePosts: PropTypes.bool.isRequired,
@@ -365,7 +365,7 @@ const mapStateToProps = ({ projectTopics, members, loadUser, notifications, proj
 
   const project = projectState.project
   const projectMembersMap = _.keyBy(project.members, 'userId')
-  const projectMembers = Object.values(allMembers) 
+  const projectMembers = Object.values(allMembers)
     .filter(m => projectMembersMap.hasOwnProperty(m.userId))
     .map(m => ({
       ...m,
@@ -380,7 +380,7 @@ const mapStateToProps = ({ projectTopics, members, loadUser, notifications, proj
   const allFeedCount = projectTopics.feeds[PROJECT_FEED_TYPE_PRIMARY].totalCount + (canAccessPrivatePosts ? projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].totalCount : 0)
 
   allFeed.sort(sortFeedByNewestMsg)
-  
+
   return {
     currentUser    : loadUser.user,
     feeds          : allFeed,
@@ -401,4 +401,4 @@ const mapDispatchToProps = {
   toggleNotificationRead,
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FeedContainer)
+export default connect(mapStateToProps, mapDispatchToProps)(MessagesFeedContainer)
