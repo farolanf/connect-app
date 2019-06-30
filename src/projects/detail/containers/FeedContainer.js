@@ -10,7 +10,8 @@ import {
   PROJECT_FEED_TYPE_PRIMARY,
   PROJECT_FEED_TYPE_MESSAGES,
   SCREEN_BREAKPOINT_MD,
-  CODER_BOT_USER as SYSTEM_USER,
+  CODER_BOT_USER_FNAME,
+  CODER_BOT_USER_LNAME,
   CONNECT_USER,
 } from '../../../config/constants'
 import { connect } from 'react-redux'
@@ -36,6 +37,12 @@ import { checkPermission } from '../../../helpers/permissions'
 import PERMISSIONS from '../../../config/permissions'
 
 import './FeedContainer.scss'
+
+const SYSTEM_USER = {
+  firstName: CODER_BOT_USER_FNAME,
+  lastName: CODER_BOT_USER_LNAME,
+  photoURL: require('../../../assets/images/avatar-coder.svg')
+}
 
 class FeedView extends React.Component {
 
