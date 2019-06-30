@@ -10,10 +10,10 @@ import ProjectToolBar from '../components/TopBar/ProjectToolBar'
 import FileDownload from '../components/FileDownload'
 import ProjectDetail from './detail/ProjectDetail'
 import Dashboard from './detail/containers/DashboardContainer'
+import Messages from './detail/containers/MessagesContainer'
 import Scope from './detail/containers/ScopeContainer'
 import ProjectPlan from './detail/containers/ProjectPlanContainer'
 import ProjectAddPhaseContainer from './detail/containers/ProjectAddPhaseContainer'
-import ProjectMessages from './detail/Messages'
 import CoderBot from '../components/CoderBot/CoderBot'
 import SpecificationContainer from './detail/containers/SpecificationContainer'
 import { requiresAuthentication } from '../components/AuthenticatedComponent'
@@ -24,8 +24,8 @@ const FileDownloadWithAuth = requiresAuthentication(FileDownload)
 const ProjectDetailWithAuth = withProps({ main:
   <Switch>
     <Route exact path="/projects/:projectId" render={() => <ProjectDetail component={Dashboard} />} />
-    <Route path="/projects/:projectId/messages/:topicId" render={() => <ProjectDetail component={ProjectMessages} />} />
-    <Route path="/projects/:projectId/messages" render={() => <ProjectDetail component={ProjectMessages} />} />
+    <Route path="/projects/:projectId/messages/:topicId" render={() => <ProjectDetail component={Messages} />} />
+    <Route path="/projects/:projectId/messages" render={() => <ProjectDetail component={Messages} />} />
     <Route path="/projects/:projectId/status/:statusId" render={() => <ProjectDetail component={Dashboard} />} />
     <Route path="/projects/:projectId/specification" render={() => <ProjectDetail component={SpecificationContainer} />} />
     <Route path="/projects/:projectId/scope" render={() => <ProjectDetail component={Scope} />} />

@@ -15,8 +15,9 @@ const TopicCard = ({
   variant,
   title,
   avatarUrl,
-  date,
+  lastMsgAuthorName,
   newMsgCount,
+  date,
   fileCount,
   linkCount,
   isPrivate
@@ -31,18 +32,21 @@ const TopicCard = ({
         {isPrivate && <InvisibleIcon styleName="private-icon" />}
         {title}
       </div>
+      {variant === 'message' && (
+        <div styleName="message-status">Last message {moment(date).format('MMMM D')} by <span styleName="author-name">{lastMsgAuthorName}</span></div>
+      )}
       {variant === 'new-message' && (
-        <div styleName="status">{singlePluralFormatter(newMsgCount, 'new messsage')} from {moment(date).format('MMMM D')}</div>
+        <div styleName="new-message-status">{singlePluralFormatter(newMsgCount, 'new messsage')} from {moment(date).format('MMMM D')}</div>
       )}
     </div>
     <div styleName="info">
-      {fileCount && (
+      {!!fileCount && (
         <div styleName="info-item">
           <FileIcon styleName="info-item-icon" />
           {singlePluralFormatter(fileCount, 'file')}
         </div>
       )}
-      {linkCount && (
+      {!!linkCount && (
         <div styleName="info-item">
           <LinkIcon styleName="info-item-icon" />
           {singlePluralFormatter(linkCount, 'link')}
@@ -60,13 +64,18 @@ TopicCard.defaultProps = {
 TopicCard.propTypes = {
   variant: PropTypes.oneOf(['message', 'new-message']),
   title: PropTypes.string,
+
+  // Only relevant if variant === 'message'
   avatarUrl: PropTypes.string,
+  lastMsgAuthorName: PropTypes.string,
+
+  // Only relevant if variant === 'new-message'
+  newMsgCount: PropTypes.number,
 
   // Latest message date if variant === 'message'.
   // Earliest date of new messages if variant === 'new-message'.
-  date: PropTypes.oneOf(['string', PropTypes.instanceOf(Date)]),
+  date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
   
-  newMsgCount: PropTypes.number,
   fileCount: PropTypes.number, 
   linkCount: PropTypes.number,
   isPrivate: PropTypes.bool

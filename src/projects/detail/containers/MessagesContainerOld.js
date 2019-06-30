@@ -214,7 +214,7 @@ class MessagesView extends React.Component {
   getPhotoUrl(thread) {
     const { allMembers } = this.props
     if (allMembers) {
-      const user = allMembers[thread.user.userId]
+      const user = allMembers[thread.userId]
       return user.photoURL
     }
   }
@@ -498,7 +498,6 @@ const mapStateToProps = ({ projectTopics, notifications, members, loadUser, proj
   const canAccessPrivatePosts = checkPermission(PERMISSIONS.ACCESS_PRIVATE_POST)
   return {
     currentUser: loadUser.user,
-    notifications,
     threads    : projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].topics,
     threadTotalCount : projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].totalCount,
     isCreatingFeed : projectTopics.isCreatingFeed,
@@ -506,7 +505,8 @@ const mapStateToProps = ({ projectTopics, notifications, members, loadUser, proj
     error      : projectTopics.error,
     allMembers : members.members,
     projectMembers : _.keyBy(projectMembers, 'userId'),
-    canAccessPrivatePosts
+    canAccessPrivatePosts,
+    notifications
   }
 }
 const mapDispatchToProps = {

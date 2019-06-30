@@ -15,9 +15,9 @@ const CardListHeader = ({
     <span styleName="title">{title}</span>
     <div>
       <span styleName={cn('filter-btn', filter === 'all' && 'active')} onClick={onClickAll}>All</span>
-      <span styleName={cn('filter-btn', filter === 'private' && 'active')}>
+      <span styleName={cn('filter-btn', filter === 'private' && 'active')} onClick={onClickAdminOnly}>
         Admin Only
-        <span styleName="filter-badge" onClick={onClickAdminOnly}>
+        <span styleName="filter-badge">
           {privateCount}
         </span>
       </span>
