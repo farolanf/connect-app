@@ -11,7 +11,8 @@ import {
   SCREEN_BREAKPOINT_MD,
   EVENT_TYPE,
   CODER_BOT_USERID,
-  CODER_BOT_USER
+  CODER_BOT_USER_FNAME,
+  CODER_BOT_USER_LNAME
 } from '../../../config/constants'
 import { connect } from 'react-redux'
 import NewPost from '../../../components/Feed/NewPost'
@@ -34,6 +35,12 @@ import PERMISSIONS from '../../../config/permissions'
 import { sortFeedByNewestMsg } from '../../../helpers/feeds'
 
 import './MessagesFeedContainer.scss'
+
+const SYSTEM_USER = {
+  firstName: CODER_BOT_USER_FNAME,
+  lastName: CODER_BOT_USER_LNAME,
+  photoURL: require('../../../assets/images/avatar-coder.svg')
+}
 
 const isPrivateFeed = feed => feed.tag === PROJECT_FEED_TYPE_MESSAGES
 
@@ -360,7 +367,7 @@ MessagesFeedContainer.PropTypes = {
 const mapStateToProps = ({ projectTopics, members, loadUser, notifications, projectState }) => {
   const allMembers = _.extend({
     ...members.members,
-    [CODER_BOT_USERID]: CODER_BOT_USER
+    [CODER_BOT_USERID]: SYSTEM_USER
   })
 
   const project = projectState.project

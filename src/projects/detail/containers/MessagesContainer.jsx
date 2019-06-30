@@ -39,11 +39,18 @@ import {
   THREAD_MESSAGES_PAGE_SIZE,
   CONNECT_USER,
   CODER_BOT_USERID,
-  CODER_BOT_USER,
+  CODER_BOT_USER_FNAME,
+  CODER_BOT_USER_LNAME,
   PROJECT_FEED_TYPE_PRIMARY,
   PROJECT_FEED_TYPE_MESSAGES,
   EVENT_TYPE,
 } from '../../../config/constants'
+
+const SYSTEM_USER = {
+  firstName: CODER_BOT_USER_FNAME,
+  lastName: CODER_BOT_USER_LNAME,
+  photoURL: require('../../../assets/images/avatar-coder.svg')
+}
 
 class MessagesContainer extends React.Component {
   constructor(props) {
@@ -155,7 +162,7 @@ class MessagesContainer extends React.Component {
     // Github issue##623, allow comments on all posts (including system posts)
     item.allowComments = true
     if (isSystemUser(item.userId)) {
-      item.user = CODER_BOT_USER
+      item.user = SYSTEM_USER
     } else {
       item.user = allMembers[item.userId]
     }
@@ -182,7 +189,7 @@ class MessagesContainer extends React.Component {
         date,
         createdAt: p.date,
         edited,
-        author: isSystemUser(p.userId) ? CODER_BOT_USER : commentAuthor,
+        author: isSystemUser(p.userId) ? SYSTEM_USER : commentAuthor,
         attachments: p.attachments || []
       }
       const prevComment = prevFeed ? _.find(prevFeed.posts, t => p.id === t.id) : null
@@ -444,7 +451,7 @@ class MessagesContainer extends React.Component {
           {unreadProjectUpdate.length > 0 &&
             <SystemFeed
               messages={sortedUnreadProjectUpdates}
-              user={CODER_BOT_USER}
+              user={SYSTEM_USER}
               onNotificationRead={this.onNotificationRead}
             />
           }
@@ -492,7 +499,7 @@ class MessagesContainer extends React.Component {
 const mapStateToProps = ({ notifications, projectState, projectTopics, members, loadUser }) => {
   const allMembers = _.extend({
     ...members.members,
-    [CODER_BOT_USERID]: CODER_BOT_USER
+    [CODER_BOT_USERID]: SYSTEM_USER
   })
 
   const project = projectState.project

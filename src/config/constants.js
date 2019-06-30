@@ -624,11 +624,6 @@ export const CONNECT_USER = {
   firstName: CONNECT_USER_FNAME,
   lastName: CONNECT_USER_LNAME,
 }
-export const CODER_BOT_USER = {
-  firstName: CODER_BOT_USER_FNAME,
-  lastName: CODER_BOT_USER_LNAME,
-  photoURL: require('../assets/images/avatar-coder.svg')
-}
 
 export const PROJECT_MAX_COLORS = 5
 
