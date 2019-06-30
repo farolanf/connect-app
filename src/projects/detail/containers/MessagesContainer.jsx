@@ -1,5 +1,5 @@
 /**
- * DashboardContainer container
+ * MessagesContainer container
  * displays content of the Dashboard tab
  *
  * NOTE data is loaded by the parent ProjectDetail component
@@ -15,48 +15,30 @@ import {
   preRenderNotifications,
 } from '../../../routes/notifications/helpers/notifications'
 import { toggleNotificationRead, toggleBundledNotificationRead } from '../../../routes/notifications/actions'
-import {
-  updateProduct,
-  fireProductDirty,
-  fireProductDirtyUndo,
-  deleteProjectPhase,
-  expandProjectPhase,
-  collapseProjectPhase,
-  collapseAllProjectPhases,
-} from '../../actions/project'
-import { addProductAttachment, updateProductAttachment, removeProductAttachment } from '../../actions/projectAttachment'
 
 import MediaQuery from 'react-responsive'
-import ProjectInfoContainer from './ProjectInfoContainer'
 import MessagesFeedContainer from './MessagesFeedContainer'
 import Sticky from '../../../components/Sticky'
 import { SCREEN_BREAKPOINT_MD } from '../../../config/constants'
 import TwoColsLayout from '../../../components/TwoColsLayout'
 import SystemFeed from '../../../components/Feed/SystemFeed'
-import ProjectScopeDrawer from '../components/ProjectScopeDrawer'
+import MessagesDrawer from '../components/MessagesDrawer'
 import NotificationsReader from '../../../components/NotificationsReader'
 import { checkPermission } from '../../../helpers/permissions'
-import { getProjectTemplateById } from '../../../helpers/templates'
 import PERMISSIONS from '../../../config/permissions'
-import { updateProject, fireProjectDirty, fireProjectDirtyUndo } from '../../actions/project'
-import { addProjectAttachment, updateProjectAttachment, removeProjectAttachment } from '../../actions/projectAttachment'
+import { sortFeedByNewestMsg } from '../../../helpers/feeds'
+
+import { loadDashboardFeeds, loadProjectMessages } from '../../actions/projectTopics'
 
 import {
-  PHASE_STATUS_ACTIVE,
-  CODER_BOT_USER_FNAME,
-  CODER_BOT_USER_LNAME,
+  CODER_BOT_USERID,
+  CODER_BOT_USER,
   PROJECT_FEED_TYPE_PRIMARY,
   PROJECT_FEED_TYPE_MESSAGES,
   EVENT_TYPE,
 } from '../../../config/constants'
 
-const SYSTEM_USER = {
-  firstName: CODER_BOT_USER_FNAME,
-  lastName: CODER_BOT_USER_LNAME,
-  photoURL: require('../../../assets/images/avatar-coder.svg')
-}
-
-class DashboardContainer extends React.Component {
+class MessagesContainer extends React.Component {
   constructor(props) {
     super(props)
 
@@ -75,24 +57,21 @@ class DashboardContainer extends React.Component {
     }
   }
 
-  componentDidMount() {
-    // if the user is a customer and its not a direct link to a particular phase
-    // then by default expand all phases which are active
-    const { isCustomerUser, expandProjectPhase } = this.props
+  componentWillMount() {
+    const { isFeedsLoading, feeds } = this.props
 
-    if (isCustomerUser) {
-      _.forEach(this.props.phases, phase => {
-        if (phase.status === PHASE_STATUS_ACTIVE) {
-          expandProjectPhase(phase.id)
-        }
-      })
+    // load feeds from dashboard if they are not currently loading or loaded yet
+    // also it will load feeds, if we already loaded them, but it was 0 feeds before
+    if (!isFeedsLoading && feeds.length < 1) {
+      this.loadAllFeeds()
     }
   }
 
-  componentWillUnmount() {
-    const { collapseAllProjectPhases } = this.props
+  loadAllFeeds() {
+    const { canAccessPrivatePosts, loadDashboardFeeds, loadProjectMessages, project } = this.props
 
-    collapseAllProjectPhases()
+    loadDashboardFeeds(project.id)
+    canAccessPrivatePosts && loadProjectMessages(project.id)
   }
 
   toggleDrawer() {
@@ -103,38 +82,17 @@ class DashboardContainer extends React.Component {
 
   render() {
     const {
-      project,
-      phases,
+      currentUser,
       currentMemberRole,
+      allMembers,
+      projectMembers,
+      project,
       isSuperUser,
-      isManageUser,
       notifications,
-      productTemplates,
-      projectTemplates,
-      productCategories,
-      isProcessing,
-      feeds,
-      isFeedsLoading,
-      productsTimelines,
-      phasesTopics,
-      fireProjectDirty,
-      fireProjectDirtyUndo,
-      updateProject,
-      addProjectAttachment,
-      updateProjectAttachment,
-      removeProjectAttachment,
-      location,
+      isFeedsLoading
     } = this.props
 
-
-    const projectTemplate = project && project.templateId && projectTemplates ? (getProjectTemplateById(projectTemplates, project.templateId)) : null
-
-    let template
-    if (project.version === 'v3') {
-      template = _.get(projectTemplate, 'scope')
-    } else {
-      template = _.get(productTemplates[0], 'template')
-    }
+    let feed
 
     // system notifications
     const notReadNotifications = filterReadNotifications(notifications)
@@ -142,19 +100,7 @@ class DashboardContainer extends React.Component {
     const sortedUnreadProjectUpdates = _.orderBy(unreadProjectUpdate, ['date'], ['desc'])
 
     const leftArea = (
-      <ProjectInfoContainer
-        location={location}
-        currentMemberRole={currentMemberRole}
-        project={project}
-        phases={phases}
-        isSuperUser={isSuperUser}
-        isManageUser={isManageUser}
-        feeds={feeds}
-        isFeedsLoading={isFeedsLoading}
-        productsTimelines={productsTimelines}
-        phasesTopics={phasesTopics}
-        isProjectProcessing={isProcessing}
-      />
+      <div>Sidebar placeholder</div>
     )
 
     return (
@@ -188,7 +134,7 @@ class DashboardContainer extends React.Component {
           {unreadProjectUpdate.length > 0 &&
             <SystemFeed
               messages={sortedUnreadProjectUpdates}
-              user={SYSTEM_USER}
+              user={CODER_BOT_USER}
               onNotificationRead={this.onNotificationRead}
             />
           }
@@ -196,25 +142,22 @@ class DashboardContainer extends React.Component {
           {/* The following containerStyle and overlayStyle are needed for shrink drawer and overlay size for not
               covering sidebar and topbar
            */}
-          <ProjectScopeDrawer
-            open={this.state.open}
-            containerStyle={{top: '110px', height: 'calc(100% - 110px)', display: 'flex', flexDirection: 'column' }}
-            overlayStyle={{top: '110px', left: '360px'}}
-            onRequestChange={(open) => this.setState({open})}
-            isSuperUser={isSuperUser}
-            project={project}
-            template={template}
-            updateProject={updateProject}
-            processing={isProcessing}
-            fireProjectDirty={fireProjectDirty}
-            fireProjectDirtyUndo= {fireProjectDirtyUndo}
-            addProjectAttachment={addProjectAttachment}
-            updateProjectAttachment={updateProjectAttachment}
-            removeProjectAttachment={removeProjectAttachment}
-            currentMemberRole={currentMemberRole}
-            productTemplates={productTemplates}
-            productCategories={productCategories}
-          />
+          {feed && (
+            <MessagesDrawer
+              open={this.state.open}
+              containerStyle={{top: '110px', height: 'calc(100% - 110px)', display: 'flex', flexDirection: 'column' }}
+              overlayStyle={{top: '110px', left: '360px'}}
+              onRequestChange={(open) => this.setState({open})}
+              processing={isFeedsLoading || !feed}
+              {...{
+                feed,
+                currentUser,
+                allMembers,
+                projectMembers,
+                currentMemberRole
+              }}
+            />
+          )}
 
           <MessagesFeedContainer
             currentMemberRole={currentMemberRole}
@@ -227,46 +170,46 @@ class DashboardContainer extends React.Component {
   }
 }
 
-const mapStateToProps = ({ notifications, projectState, projectTopics, templates, phasesTopics }) => {
+const mapStateToProps = ({ notifications, projectState, projectTopics, members }) => {
+  const allMembers = _.extend({
+    ...members.members,
+    [CODER_BOT_USERID]: CODER_BOT_USER
+  })
+
+  const project = projectState.project
+  const projectMembersMap = _.keyBy(project.members, 'userId')
+  const projectMembers = Object.values(allMembers) 
+    .filter(m => projectMembersMap.hasOwnProperty(m.userId))
+    .map(m => ({
+      ...m,
+      role:projectMembersMap[m.userId].role
+    }))
+
   // all feeds includes primary as well as private topics if user has access to private topics
   let allFeed = projectTopics.feeds[PROJECT_FEED_TYPE_PRIMARY].topics
-  if (checkPermission(PERMISSIONS.ACCESS_PRIVATE_POST)) {
+  const canAccessPrivatePosts = checkPermission(PERMISSIONS.ACCESS_PRIVATE_POST)
+  if (canAccessPrivatePosts) {
     allFeed = [...allFeed, ...projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].topics]
   }
+  allFeed.sort(sortFeedByNewestMsg)
+
+  console.log('feeds', allFeed)
 
   return {
     notifications: preRenderNotifications(notifications.notifications),
-    productTemplates: templates.productTemplates,
-    projectTemplates: templates.projectTemplates,
-    productCategories: templates.productCategories,
-    isProcessing: projectState.processing,
-    phases: projectState.phases,
     feeds: allFeed,
     isFeedsLoading: projectTopics.isLoading,
-    phasesStates: projectState.phasesStates,
-    phasesTopics,
+    allMembers,
+    projectMembers,
+    canAccessPrivatePosts
   }
 }
 
 const mapDispatchToProps = {
   toggleNotificationRead,
   toggleBundledNotificationRead,
-  updateProduct,
-  fireProductDirty,
-  fireProductDirtyUndo,
-  addProductAttachment,
-  updateProductAttachment,
-  removeProductAttachment,
-  deleteProjectPhase,
-  expandProjectPhase,
-  collapseProjectPhase,
-  collapseAllProjectPhases,
-  fireProjectDirty,
-  fireProjectDirtyUndo,
-  updateProject,
-  addProjectAttachment,
-  updateProjectAttachment,
-  removeProjectAttachment
+  loadDashboardFeeds,
+  loadProjectMessages
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardContainer)
+export default connect(mapStateToProps, mapDispatchToProps)(MessagesContainer)

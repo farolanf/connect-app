@@ -4,7 +4,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Prompt, NavLink } from 'react-router-dom'
-import moment from 'moment'
 import _ from 'lodash'
 import {
   PROJECT_FEED_TYPE_PRIMARY,
@@ -32,6 +31,8 @@ import TopicCard from '../components/TopicCard/TopicCard'
 import { checkPermission } from '../../../helpers/permissions'
 import PERMISSIONS from '../../../config/permissions'
 
+import { sortFeedByNewestMsg } from '../../../helpers/feeds'
+
 import './FeedContainer.scss'
 
 const isPrivateFeed = feed => feed.tag === PROJECT_FEED_TYPE_MESSAGES
@@ -55,10 +56,6 @@ const getLinkCount = feed => {
 }
 
 const getPrivateCount = feeds => feeds.filter(isPrivateFeed).length
-
-const sortFeedByNewestMsg = (a, b) =>
-  moment(b.posts.length && b.posts[0].date).valueOf()
-  - moment(a.posts.length && a.posts[0].date).valueOf()
 
 class FeedView extends React.Component {
 
