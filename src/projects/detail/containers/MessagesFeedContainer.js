@@ -3,7 +3,7 @@
  */
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Prompt } from 'react-router-dom'
+import { Prompt, NavLink } from 'react-router-dom'
 import moment from 'moment'
 import _ from 'lodash'
 import {
@@ -260,16 +260,20 @@ class FeedView extends React.Component {
               />
             )}
             {newFeeds.map((feed) => (
-              <TopicCard
+              <NavLink
                 key={feed.id}
-                variant="new-message"
-                title={feed.title}
-                date={this.getEarliestNewMsgDate(feed)}
-                newMsgCount={this.getNewMsgCount(feed)}
-                fileCount={getFileCount(feed)}
-                linkCount={getLinkCount(feed)}
-                isPrivate={isPrivateFeed(feed)}
-              />
+                to={`/projects/${project.id}/messages/${feed.id}`}
+              >
+                <TopicCard
+                  variant="new-message"
+                  title={feed.title}
+                  date={this.getEarliestNewMsgDate(feed)}
+                  newMsgCount={this.getNewMsgCount(feed)}
+                  fileCount={getFileCount(feed)}
+                  linkCount={getLinkCount(feed)}
+                  isPrivate={isPrivateFeed(feed)}
+                />
+              </NavLink>
             ))}
             {(!!oldFeeds.length || earlierMessagesFilter !== 'all') && (
               <CardListHeader
@@ -281,16 +285,20 @@ class FeedView extends React.Component {
               />
             )}
             {oldFeeds.map(feed => (
-              <TopicCard
+              <NavLink
                 key={feed.id}
-                title={feed.title}
-                avatarUrl={this.getPhotoUrl(feed)}
-                date={getLatestMsgDate(feed)}
-                lastMsgAuthorName={this.getLastMsgAuthorName(feed)}
-                fileCount={getFileCount(feed)}
-                linkCount={getLinkCount(feed)}
-                isPrivate={isPrivateFeed(feed)}
-              />
+                to={`/projects/${project.id}/messages/${feed.id}`}
+              >
+                <TopicCard
+                  title={feed.title}
+                  avatarUrl={this.getPhotoUrl(feed)}
+                  date={getLatestMsgDate(feed)}
+                  lastMsgAuthorName={this.getLastMsgAuthorName(feed)}
+                  fileCount={getFileCount(feed)}
+                  linkCount={getLinkCount(feed)}
+                  isPrivate={isPrivateFeed(feed)}
+                />
+              </NavLink>
             ))}
           </div>
         </Section>
@@ -376,9 +384,6 @@ const mapStateToProps = ({ projectTopics, members, loadUser, notifications, proj
 
   allFeed.sort(sortFeedByNewestMsg)
   
-  console.log('members', allMembers)
-  console.log('feeds', allFeed)
-
   return {
     currentUser    : loadUser.user,
     feeds          : allFeed,
