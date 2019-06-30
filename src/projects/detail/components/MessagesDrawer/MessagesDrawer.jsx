@@ -51,18 +51,18 @@ class MessagesDrawer extends Component {
                 currentUser,
                 allMembers,
                 projectMembers,
-                onNewCommentChange: this.onNewCommentChange,
-                onAddNewComment: this.onAddNewComment,
-                onLoadMoreComments: this.onShowAllComments,
-                onEditMessage: this.onEditMessage,
-                onSaveMessageChange: this.onSaveMessageChange,
-                onSaveMessage: this.onSaveMessage,
-                onDeleteMessage: this.onDeleteMessage,
-                onEditTopic: this.onEditTopic,
-                onTopicChange: this.onTopicChange,
-                onSaveTopic: this.onSaveTopic,
-                onDeleteTopic: this.onDeleteTopic,
-                onEnterFullscreenClick: this.enterFullscreen,
+                onNewCommentChange: this.props.onNewCommentChange,
+                onAddNewComment: this.props.onAddNewComment,
+                onLoadMoreComments: this.props.onShowAllComments,
+                onEditMessage: this.props.onEditMessage,
+                onSaveMessageChange: this.props.onSaveMessageChange,
+                onSaveMessage: this.props.onSaveMessage,
+                onDeleteMessage: this.props.onDeleteMessage,
+                onEditTopic: this.props.onEditTopic,
+                onTopicChange: this.props.onTopicChange,
+                onSaveTopic: this.props.onSaveTopic,
+                onDeleteTopic: this.props.onDeleteTopic,
+                onEnterFullscreenClick: this.props.enterFullscreen
               }}
             />
           )}
@@ -99,7 +99,19 @@ MessagesDrawer.propTypes = {
   currentUser: PT.object,
   allMembers: PT.object.isRequired,
   projectMembers: PT.object.isRequired,
-  currentMemberRole: PT.string
+  currentMemberRole: PT.string,
+  onNewCommentChange: PT.func.isRequired,
+  onAddNewComment: PT.func.isRequired,
+  onShowAllComments: PT.func.isRequired,
+  onEditMessage: PT.func.isRequired,
+  onSaveMessageChange: PT.func.isRequired,
+  onSaveMessage: PT.func.isRequired,
+  onDeleteMessage: PT.func.isRequired,
+  onEditTopic: PT.func.isRequired,
+  onTopicChange: PT.func.isRequired,
+  onSaveTopic: PT.func.isRequired,
+  onDeleteTopic: PT.func.isRequired,
+  enterFullscreen: PT.func.isRequired
 }
 
 export default MessagesDrawer
