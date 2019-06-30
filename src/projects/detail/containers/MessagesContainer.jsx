@@ -7,6 +7,7 @@
 import React from 'react'
 import _ from 'lodash'
 import { connect } from 'react-redux'
+import { withRouter } from 'react-router-dom'
 
 import {
   filterReadNotifications,
@@ -26,7 +27,7 @@ import MessagesDrawer from '../components/MessagesDrawer'
 import NotificationsReader from '../../../components/NotificationsReader'
 import { checkPermission } from '../../../helpers/permissions'
 import PERMISSIONS from '../../../config/permissions'
-import { sortFeedByNewestMsg } from '../../../helpers/feeds'
+import { sortFeedByNewestMsg, mapFeed } from '../../../helpers/feeds'
 
 import { loadDashboardFeeds, loadProjectMessages } from '../../actions/projectTopics'
 
@@ -43,7 +44,10 @@ class MessagesContainer extends React.Component {
     super(props)
 
     this.state = {
-      open: false
+      open: false,
+      feed: null,
+      feeds: [],
+      showAll: []
     }
     this.onNotificationRead = this.onNotificationRead.bind(this)
     this.toggleDrawer = this.toggleDrawer.bind(this)
@@ -64,6 +68,44 @@ class MessagesContainer extends React.Component {
     // also it will load feeds, if we already loaded them, but it was 0 feeds before
     if (!isFeedsLoading && feeds.length < 1) {
       this.loadAllFeeds()
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    this.init(nextProps, this.props)
+  }
+
+  init(props, prevProps) {
+    const { match, feeds } = props
+    const { feeds: stateFeeds, showAll } = this.state
+
+    let resetNewPost = false
+    if (prevProps) {
+      resetNewPost = prevProps.isCreatingFeed && !props.isCreatingFeed && !props.error
+    }
+
+    const mappedFeeds = feeds.map((feed) => {
+      // finds the same feed from previous props, if exists
+      let prevFeed
+      if (prevProps && prevProps.feeds) {
+        prevFeed = _.find(prevProps.feeds, f => feed.id === f.id)
+      }
+      // reset new comment if we were adding comment and there is no error in doing so
+      const resetNewComment = prevFeed && prevFeed.isAddingComment && !feed.isAddingComment && !feed.error
+      return mapFeed(feed, showAll.indexOf(feed.id) > -1, resetNewComment, stateFeeds, props, prevProps)
+    }).filter(item => item)
+
+    this.setState({
+      newPost: resetNewPost ? {} : this.state.newPost,
+      feeds: mappedFeeds
+    })
+
+    if (match.params.topicId) {
+      const topicId = Number(match.params.topicId)
+      const feed = _.find(mappedFeeds, { id: topicId })
+      this.setState({ feed, open: true })
+    } else {
+      this.setState({ open: false })
     }
   }
 
@@ -91,8 +133,11 @@ class MessagesContainer extends React.Component {
       notifications,
       isFeedsLoading
     } = this.props
+    
+    const { feed } = this.state
 
-    let feed
+    console.log('feed', feed)
+    console.log('currentUser', currentUser)
 
     // system notifications
     const notReadNotifications = filterReadNotifications(notifications)
@@ -170,7 +215,7 @@ class MessagesContainer extends React.Component {
   }
 }
 
-const mapStateToProps = ({ notifications, projectState, projectTopics, members }) => {
+const mapStateToProps = ({ notifications, projectState, projectTopics, members, loadUser }) => {
   const allMembers = _.extend({
     ...members.members,
     [CODER_BOT_USERID]: CODER_BOT_USER
@@ -178,12 +223,13 @@ const mapStateToProps = ({ notifications, projectState, projectTopics, members }
 
   const project = projectState.project
   const projectMembersMap = _.keyBy(project.members, 'userId')
-  const projectMembers = Object.values(allMembers) 
+  let projectMembers = Object.values(allMembers) 
     .filter(m => projectMembersMap.hasOwnProperty(m.userId))
     .map(m => ({
       ...m,
       role:projectMembersMap[m.userId].role
     }))
+  projectMembers = _.keyBy(projectMembers, 'userId')
 
   // all feeds includes primary as well as private topics if user has access to private topics
   let allFeed = projectTopics.feeds[PROJECT_FEED_TYPE_PRIMARY].topics
@@ -194,6 +240,7 @@ const mapStateToProps = ({ notifications, projectState, projectTopics, members }
   allFeed.sort(sortFeedByNewestMsg)
 
   console.log('feeds', allFeed)
+  console.log('projectMembers', projectMembers)
 
   return {
     notifications: preRenderNotifications(notifications.notifications),
@@ -201,7 +248,8 @@ const mapStateToProps = ({ notifications, projectState, projectTopics, members }
     isFeedsLoading: projectTopics.isLoading,
     allMembers,
     projectMembers,
-    canAccessPrivatePosts
+    canAccessPrivatePosts,
+    currentUser: loadUser.user
   }
 }
 
@@ -212,4 +260,4 @@ const mapDispatchToProps = {
   loadProjectMessages
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(MessagesContainer)
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(MessagesContainer))

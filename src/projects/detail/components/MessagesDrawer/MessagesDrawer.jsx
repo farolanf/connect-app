@@ -98,7 +98,7 @@ MessagesDrawer.propTypes = {
   feed: PT.object,
   currentUser: PT.object,
   allMembers: PT.object.isRequired,
-  projectMembers: PT.array.isRequired,
+  projectMembers: PT.object.isRequired,
   currentMemberRole: PT.string
 }
 
