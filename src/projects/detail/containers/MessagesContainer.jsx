@@ -1,42 +1,50 @@
 /**
- * Container for Dashboard Posts Section
+ * MessagesContainer container
+ * displays content of the Dashboard tab
+ *
+ * NOTE data is loaded by the parent ProjectDetail component
  */
 import React from 'react'
-import PropTypes from 'prop-types'
-import { Prompt } from 'react-router-dom'
 import _ from 'lodash'
-import {
-  THREAD_MESSAGES_PAGE_SIZE,
-  PROJECT_FEED_TYPE_PRIMARY,
-  PROJECT_FEED_TYPE_MESSAGES,
-  SCREEN_BREAKPOINT_MD,
-  CODER_BOT_USER_FNAME,
-  CODER_BOT_USER_LNAME,
-  CONNECT_USER,
-} from '../../../config/constants'
 import { connect } from 'react-redux'
+import { withRouter } from 'react-router-dom'
 import update from 'react-addons-update'
-import NewPost from '../../../components/Feed/NewPost'
 
-import { loadDashboardFeeds, loadProjectMessages, createProjectTopic, saveProjectTopic, deleteProjectTopic, loadFeedComments,
-  addFeedComment, saveFeedComment, deleteFeedComment, getFeedComment } from '../../actions/projectTopics'
-import { toggleNotificationRead } from '../../../routes/notifications/actions'
-import spinnerWhileLoading from '../../../components/LoadingSpinner'
-import PostsRefreshPrompt from '../components/PostsRefreshPrompt'
+import {
+  filterReadNotifications,
+  filterNotificationsByProjectId,
+  filterProjectNotifications,
+  preRenderNotifications,
+} from '../../../routes/notifications/helpers/notifications'
+
+import { toggleNotificationRead, toggleBundledNotificationRead } from '../../../routes/notifications/actions'
+
+import { loadDashboardFeeds, loadProjectMessages, saveProjectTopic, deleteProjectTopic, loadFeedComments, addFeedComment, saveFeedComment, deleteFeedComment, getFeedComment } from '../../actions/projectTopics'
 
 import MediaQuery from 'react-responsive'
-import ChatButton from '../../../components/ChatButton/ChatButton'
-import NewPostMobile from '../../../components/Feed/NewPostMobile'
-import FullscreenFeedContainer from '../containers/FullscreenFeedContainer'
-import Section from '../components/Section'
-import SectionTitle from '../components/SectionTitle'
-import SingleFeedContainer from './SingleFeedContainer'
-
-import { isSystemUser } from '../../../helpers/tcHelpers'
+import MessagesFeedContainer from './MessagesFeedContainer'
+import Sticky from '../../../components/Sticky'
+import { SCREEN_BREAKPOINT_MD } from '../../../config/constants'
+import TwoColsLayout from '../../../components/TwoColsLayout'
+import SystemFeed from '../../../components/Feed/SystemFeed'
+import MessagesDrawer from '../components/MessagesDrawer'
+import NotificationsReader from '../../../components/NotificationsReader'
 import { checkPermission } from '../../../helpers/permissions'
 import PERMISSIONS from '../../../config/permissions'
+import { sortFeedByNewestMsg } from '../../../helpers/feeds'
 
-import './FeedContainer.scss'
+import { isSystemUser } from '../../../helpers/tcHelpers'
+
+import {
+  THREAD_MESSAGES_PAGE_SIZE,
+  CONNECT_USER,
+  CODER_BOT_USERID,
+  CODER_BOT_USER_FNAME,
+  CODER_BOT_USER_LNAME,
+  PROJECT_FEED_TYPE_PRIMARY,
+  PROJECT_FEED_TYPE_MESSAGES,
+  EVENT_TYPE,
+} from '../../../config/constants'
 
 const SYSTEM_USER = {
   firstName: CODER_BOT_USER_FNAME,
@@ -44,52 +52,55 @@ const SYSTEM_USER = {
   photoURL: require('../../../assets/images/avatar-coder.svg')
 }
 
-class FeedView extends React.Component {
-
+class MessagesContainer extends React.Component {
   constructor(props) {
     super(props)
-    this.onNewPost = this.onNewPost.bind(this)
-    this.onNewCommentChange = this.onNewCommentChange.bind(this)
-    this.onShowAllComments = this.onShowAllComments.bind(this)
-    this.onAddNewComment = this.onAddNewComment.bind(this)
+
+    this.state = {
+      open: false,
+      feedId: null,
+      feeds: [],
+      showAll: []
+    }
     this.onLeave = this.onLeave.bind(this)
     this.isChanged = this.isChanged.bind(this)
-    this.onNewPostChange = this.onNewPostChange.bind(this)
+    this.onNotificationRead = this.onNotificationRead.bind(this)
+    this.toggleDrawer = this.toggleDrawer.bind(this)
+    this.onNewCommentChange = this.onNewCommentChange.bind(this)
+    this.onAddNewComment = this.onAddNewComment.bind(this)
+    this.onShowAllComments = this.onShowAllComments.bind(this)
     this.onEditMessage = this.onEditMessage.bind(this)
     this.onSaveMessageChange = this.onSaveMessageChange.bind(this)
     this.onSaveMessage = this.onSaveMessage.bind(this)
     this.onDeleteMessage = this.onDeleteMessage.bind(this)
-    this.onSaveTopic = this.onSaveTopic.bind(this)
-    this.onDeleteTopic = this.onDeleteTopic.bind(this)
     this.onEditTopic = this.onEditTopic.bind(this)
     this.onTopicChange = this.onTopicChange.bind(this)
-    this.onRefreshFeeds = this.onRefreshFeeds.bind(this)
-    this.toggleNewPostMobile = this.toggleNewPostMobile.bind(this)
-    this.enterFullscreen = this.enterFullscreen.bind(this)
-    this.exitFullscreen = this.exitFullscreen.bind(this)
-    this.state = {
-      feeds : [],
-      showAll: [],
-      newPost: {},
-      isNewPostMobileOpen: false,
-      fullscreenFeedId: null,
-    }
+    this.onSaveTopic = this.onSaveTopic.bind(this)
+    this.onDeleteTopic = this.onDeleteTopic.bind(this)
   }
 
   componentDidMount() {
     window.addEventListener('beforeunload', this.onLeave)
   }
 
+  componentWillUnmount() {
+    window.removeEventListener('beforeunload', this.onLeave)
+  }
+
   componentWillMount() {
+    const { isFeedsLoading, feeds } = this.props
+
     this.init(this.props)
+
+    // load feeds from dashboard if they are not currently loading or loaded yet
+    // also it will load feeds, if we already loaded them, but it was 0 feeds before
+    if (!isFeedsLoading && feeds.length < 1) {
+      this.loadAllFeeds()
+    }
   }
 
   componentWillReceiveProps(nextProps) {
     this.init(nextProps, this.props)
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('beforeunload', this.onLeave)
   }
 
   // Notify user if they navigate away while the form is modified.
@@ -97,10 +108,6 @@ class FeedView extends React.Component {
     if (this.isChanged()) {
       return e.returnValue = 'You haven\'t posted your message. If you leave this page, your message will not be saved. Are you sure you want to leave?'
     }
-  }
-
-  toggleNewPostMobile() {
-    this.setState({ isNewPostMobileOpen: !this.state.isNewPostMobileOpen })
   }
 
   isChanged() {
@@ -113,6 +120,54 @@ class FeedView extends React.Component {
     ))
     const hasThread = (newPost.title && !!newPost.title.trim().length) || ( newPost.content && !!newPost.content.trim().length)
     return hasThread || hasComment
+  }
+
+  init(props, prevProps) {
+    const { history, location, match, feeds, project } = props
+
+    let resetNewPost = false
+    if (prevProps) {
+      resetNewPost = prevProps.isCreatingFeed && !props.isCreatingFeed && !props.error
+    }
+
+    const mappedFeeds = feeds.map((feed) => {
+      // finds the same feed from previous props, if exists
+      let prevFeed
+      if (prevProps && prevProps.feeds) {
+        prevFeed = _.find(prevProps.feeds, f => feed.id === f.id)
+      }
+      // reset new comment if we were adding comment and there is no error in doing so
+      const resetNewComment = prevFeed && prevFeed.isAddingComment && !feed.isAddingComment && !feed.error
+      return this.mapFeed(feed, this.state.showAll.indexOf(feed.id) > -1, resetNewComment, prevProps)
+    }).filter(item => item)
+
+    this.setState({
+      newPost: resetNewPost ? {} : this.state.newPost,
+      feeds: mappedFeeds
+    })
+
+    // open messages drawer if there's corresponding path param
+    if (match.params.topicId) {
+      const topicId = Number(match.params.topicId)
+      const feed = _.find(mappedFeeds, { id: topicId })
+      feed && this.setState({ feedId: feed.id, open: true })
+    } else if ((location.pathname + location.hash).match(/messages#comment-\d+/)) {
+      // handle temporary path "/projects/:projectId/messages#comment-:postId"
+      // that's a redirect from "/projects/:projectId/#comment-:postId"
+      // which doesn't have topicId param.
+
+      // Redirect to "/projects/:projectId/messages/:topicId#comment-:postId"
+      const m = location.hash.match(/#comment-(\d+)/)
+      if (m) {
+        const postId = Number(m[1])
+        const feed = _.find(mappedFeeds, feed => feed.postIds.includes(postId))
+        if (feed) {
+          history.replace(`/projects/${project.id}/messages/${feed.id}#comment-${postId}`)
+        }
+      }
+    } else {
+      this.setState({ open: false })
+    }
   }
 
   mapFeed(feed, showAll = false, resetNewComment = false, prevProps) {
@@ -196,48 +251,31 @@ class FeedView extends React.Component {
     item.hasMoreComments = item.comments.length !== item.totalComments
     // adds permalink for the feed
     // item.permalink = `/projects/${project.id}/status/${item.id}`
-    item.permalink = `/projects/${project.id}#feed-${item.id}`
+    item.permalink = `/projects/${project.id}/messages/${item.id}`
     return item
   }
 
-  init(props, prevProps) {
-    const { feeds } = props
-    let resetNewPost = false
-    if (prevProps) {
-      resetNewPost = prevProps.isCreatingFeed && !props.isCreatingFeed && !props.error
-    }
-    this.setState({
-      newPost: resetNewPost ? {} : this.state.newPost,
-      feeds: feeds.map((feed) => {
-        // finds the same feed from previous props, if exists
-        let prevFeed
-        if (prevProps && prevProps.feeds) {
-          prevFeed = _.find(prevProps.feeds, f => feed.id === f.id)
-        }
-        // reset new comment if we were adding comment and there is no error in doing so
-        const resetNewComment = prevFeed && prevFeed.isAddingComment && !feed.isAddingComment && !feed.error
-        return this.mapFeed(feed, this.state.showAll.indexOf(feed.id) > -1, resetNewComment, prevProps)
-      }).filter(item => item)
-    })
+  loadAllFeeds() {
+    const { canAccessPrivatePosts, loadDashboardFeeds, loadProjectMessages, project } = this.props
+
+    loadDashboardFeeds(project.id)
+    canAccessPrivatePosts && loadProjectMessages(project.id)
   }
 
-  onNewPostChange(title, content) {
-    this.setState({
-      newPost: {title, content}
-    })
-  }
-
-  onNewPost({title, content, isPrivate = false, attachmentIds}) {
+  toggleDrawer(open) {
     const { project } = this.props
-    const newFeed = {
-      title,
-      body: content,
-      tag: isPrivate ? PROJECT_FEED_TYPE_MESSAGES : PROJECT_FEED_TYPE_PRIMARY
+    this.setState({ open })
+    if (!open) {
+      this.props.history.push(`/projects/${project.id}/messages`)
     }
-    if (attachmentIds) {
-      Object.assign(newFeed, { attachmentIds })
+  }
+
+  onNotificationRead(notification) {
+    if (notification.bundledIds) {
+      this.props.toggleBundledNotificationRead(notification.id, notification.bundledIds)
+    } else {
+      this.props.toggleNotificationRead(notification.id)
     }
-    this.props.createProjectTopic(project.id, newFeed)
   }
 
   onNewCommentChange(feedId, content) {
@@ -271,9 +309,10 @@ class FeedView extends React.Component {
       }))
       this.props.loadFeedComments(feedId, feed.tag, commentIdsToRetrieve)
     } else {
+      const mappedFeed = this.mapFeed(feed, true)
       this.setState(update(this.state, {
         showAll: { $push: [feedId] },
-        feeds: { $splice: [[stateFeedIdx, 1, this.mapFeed(feed, true) ]] }
+        feeds: { $splice: [[stateFeedIdx, 1, mappedFeed ]] }
       }))
     }
   }
@@ -370,51 +409,83 @@ class FeedView extends React.Component {
     this.props.deleteProjectTopic(feedId, feed.tag)
   }
 
-  onRefreshFeeds() {
-    const { loadDashboardFeeds, loadProjectMessages, project, canAccessPrivatePosts } = this.props
-    loadDashboardFeeds(project.id)
-    canAccessPrivatePosts && loadProjectMessages(project.id)
-  }
+  render() {
+    const {
+      currentUser,
+      currentMemberRole,
+      allMembers,
+      projectMembers,
+      project,
+      isSuperUser,
+      notifications,
+      isFeedsLoading
+    } = this.props
 
-  enterFullscreen(feedId) {
-    this.setState({ fullscreenFeedId: feedId })
-  }
+    const { feedId } = this.state
+    const feed = _.find(this.state.feeds, { id: feedId })
 
-  exitFullscreen() {
-    this.setState({ fullscreenFeedId: null })
-  }
+    // system notifications
+    const notReadNotifications = filterReadNotifications(notifications)
+    const unreadProjectUpdate = filterProjectNotifications(filterNotificationsByProjectId(notReadNotifications, project.id))
+    const sortedUnreadProjectUpdates = _.orderBy(unreadProjectUpdate, ['date'], ['desc'])
 
-  render () {
-    const {currentUser, currentMemberRole, isCreatingFeed, error, allMembers,
-      toggleNotificationRead, notifications, project, isSuperUser, projectMembers, canAccessPrivatePosts } = this.props
-    const { feeds, isNewPostMobileOpen, fullscreenFeedId } = this.state
-    const isChanged = this.isChanged()
-    const onLeaveMessage = this.onLeave() || ''
-    const fullscreenFeed = fullscreenFeedId && _.find(feeds, { id: fullscreenFeedId })
+    const leftArea = (
+      <div />
+    )
 
     return (
-      <div>
-        {fullscreenFeed && (
-          <FullscreenFeedContainer
-            currentMemberRole={currentMemberRole}
-            isSuperUser={isSuperUser}
-            feeds={feeds}
-            onCloseClick={this.exitFullscreen}
-            activeFeedId={fullscreenFeedId}
-            onChannelClick={(feed) => {
-              this.enterFullscreen(feed.id)
+      <TwoColsLayout>
+        <NotificationsReader
+          id="dashboard"
+          criteria={[
+            { eventType: EVENT_TYPE.PROJECT.ACTIVE, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.JOINED, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.LEFT, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.REMOVED, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.ASSIGNED_AS_OWNER, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.COPILOT_JOINED, contents: { projectId: project.id } },
+            { eventType: EVENT_TYPE.MEMBER.MANAGER_JOINED, contents: { projectId: project.id } },
+          ]}
+        />
+
+        <TwoColsLayout.Sidebar>
+          <MediaQuery minWidth={SCREEN_BREAKPOINT_MD}>
+            {(matches) => {
+              if (matches) {
+                return <Sticky top={110}>{leftArea}</Sticky>
+              } else {
+                return leftArea
+              }
             }}
-          >
-            <SingleFeedContainer
+          </MediaQuery>
+        </TwoColsLayout.Sidebar>
+
+        <TwoColsLayout.Content>
+          {unreadProjectUpdate.length > 0 &&
+            <SystemFeed
+              messages={sortedUnreadProjectUpdates}
+              user={SYSTEM_USER}
+              onNotificationRead={this.onNotificationRead}
+            />
+          }
+          {/* The following containerStyle and overlayStyle are needed for shrink drawer and overlay size for not covering sidebar and topbar */}
+          {feed && (
+            <MessagesDrawer
+              open={this.state.open}
+              containerStyle={{top: '110px', height: 'calc(100% - 110px)', display: 'flex', flexDirection: 'column' }}
+              overlayStyle={{top: '110px', left: '360px'}}
+              noHeader
+              onRequestChange={this.toggleDrawer}
+              processing={isFeedsLoading || !feed}
               {...{
-                ...fullscreenFeed,
-                allowComments: fullscreenFeed.allowComments && !!currentMemberRole,
+                feed,
                 currentUser,
                 allMembers,
                 projectMembers,
+                currentMemberRole,
                 onNewCommentChange: this.onNewCommentChange,
                 onAddNewComment: this.onAddNewComment,
-                onLoadMoreComments: this.onShowAllComments,
+                onShowAllComments: this.onShowAllComments,
                 onEditMessage: this.onEditMessage,
                 onSaveMessageChange: this.onSaveMessageChange,
                 onSaveMessage: this.onSaveMessage,
@@ -423,173 +494,69 @@ class FeedView extends React.Component {
                 onTopicChange: this.onTopicChange,
                 onSaveTopic: this.onSaveTopic,
                 onDeleteTopic: this.onDeleteTopic,
-                onExitFullscreenClick: this.exitFullscreen,
-                isFullScreen: true,
+                onClose: () => this.toggleDrawer(false)
               }}
             />
-          </FullscreenFeedContainer>
-        )}
+          )}
 
-        <PostsRefreshPrompt
-          preventShowing={isChanged}
-          toggleNotificationRead={toggleNotificationRead}
-          refreshFeeds={this.onRefreshFeeds}
-          notifications={notifications}
-          projectId={project.id}
-        />
-
-
-        <Prompt
-          when={!!onLeaveMessage}
-          message={onLeaveMessage}
-        />
-
-        <Section>
-          <SectionTitle title="Discussions" />
-          <div>
-            <MediaQuery minWidth={SCREEN_BREAKPOINT_MD}>
-              <NewPost
-                currentUser={currentUser}
-                allMembers={allMembers}
-                projectMembers={projectMembers}
-                onPost={this.onNewPost}
-                isCreating={isCreatingFeed}
-                hasError={error}
-                heading="NEW STATUS POST"
-                onNewPostChange={this.onNewPostChange}
-                titlePlaceholder="Start a new discussion"
-                expandedTitlePlaceholder="Add your discussion title"
-                contentPlaceholder="Add your first post"
-                canAccessPrivatePosts={canAccessPrivatePosts}
-              />
-            </MediaQuery>
-            {feeds.map((feed) => (
-              <div styleName="feed-card" key={feed.id}>
-                <SingleFeedContainer
-                  {...{
-                    ...feed,
-                    allowComments: feed.allowComments && !!currentMemberRole,
-                    currentUser,
-                    allMembers,
-                    projectMembers,
-                    onNewCommentChange: this.onNewCommentChange,
-                    onAddNewComment: this.onAddNewComment,
-                    onLoadMoreComments: this.onShowAllComments,
-                    onEditMessage: this.onEditMessage,
-                    onSaveMessageChange: this.onSaveMessageChange,
-                    onSaveMessage: this.onSaveMessage,
-                    onDeleteMessage: this.onDeleteMessage,
-                    onEditTopic: this.onEditTopic,
-                    onTopicChange: this.onTopicChange,
-                    onSaveTopic: this.onSaveTopic,
-                    onDeleteTopic: this.onDeleteTopic,
-                    onEnterFullscreenClick: this.enterFullscreen,
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </Section>
-        { !isNewPostMobileOpen && !fullscreenFeed &&
-          <MediaQuery maxWidth={SCREEN_BREAKPOINT_MD - 1}>
-            <div styleName="chat-button-space">
-              <ChatButton onClick={this.toggleNewPostMobile} />
-            </div>
-          </MediaQuery>
-        }
-        { isNewPostMobileOpen &&
-          <NewPostMobile
-            statusTitle="NEW STATUS"
-            commentTitle="WRITE POST"
-            statusPlaceholder="Start a new discussion"
-            commentPlaceholder="Add your first post"
-            submitText="Post"
-            nextStepText="Add post"
-            onClose={this.toggleNewPostMobile}
-            allMembers={allMembers}
-            currentUser={currentUser}
-            onPost={this.onNewPost}
-            isCreating={isCreatingFeed}
-            hasError={error}
-            onNewPostChange={this.onNewPostChange}
-            canAccessPrivatePosts={canAccessPrivatePosts}
+          <MessagesFeedContainer
+            currentMemberRole={currentMemberRole}
+            project={project}
+            isSuperUser={isSuperUser}
           />
-        }
-      </div>
+        </TwoColsLayout.Content>
+      </TwoColsLayout>
     )
   }
 }
-const enhance = spinnerWhileLoading(props => !props.isLoading)
-const EnhancedFeedView = enhance(FeedView)
 
-class FeedContainer extends React.Component {
-  constructor(props) {
-    super(props)
-  }
+const mapStateToProps = ({ notifications, projectState, projectTopics, members, loadUser }) => {
+  const allMembers = _.extend({
+    ...members.members,
+    [CODER_BOT_USERID]: SYSTEM_USER
+  })
 
-  componentWillMount() {
-    // As we implemented links to the topics on the Dashboard and Plan tabs sidebars
-    // we want to navigate between topics on the different tabs
-    // to make navigation smooth, we don't reload feeds on the dashboard tab
-    // every time we switch to the dashboard tab
-    // TODO this is an experimental way, we have to think if this is good
-    //      or we have reload feeds some way still keeping navigation smooth
-    // this.props.loadDashboardFeeds(this.props.project.id)
-  }
-
-  render() {
-    return <EnhancedFeedView {...this.props} />
-  }
-}
-
-FeedContainer.PropTypes = {
-  currentMemberRole: PropTypes.string,
-  project: PropTypes.object.isRequired,
-  canAccessPrivatePosts: PropTypes.bool.isRequired,
-}
-
-const mapStateToProps = ({ projectTopics, members, loadUser, notifications, projectState }) => {
   const project = projectState.project
   const projectMembersMap = _.keyBy(project.members, 'userId')
-  const projectMembers = Object.values(members.members) 
+  let projectMembers = Object.values(allMembers)
     .filter(m => projectMembersMap.hasOwnProperty(m.userId))
     .map(m => ({
       ...m,
       role:projectMembersMap[m.userId].role
     }))
+  projectMembers = _.keyBy(projectMembers, 'userId')
+
   // all feeds includes primary as well as private topics if user has access to private topics
   let allFeed = projectTopics.feeds[PROJECT_FEED_TYPE_PRIMARY].topics
   const canAccessPrivatePosts = checkPermission(PERMISSIONS.ACCESS_PRIVATE_POST)
   if (canAccessPrivatePosts) {
     allFeed = [...allFeed, ...projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].topics]
   }
-  const allFeedCount = projectTopics.feeds[PROJECT_FEED_TYPE_PRIMARY].totalCount + (canAccessPrivatePosts ? projectTopics.feeds[PROJECT_FEED_TYPE_MESSAGES].totalCount : 0)
+  allFeed.sort(sortFeedByNewestMsg)
 
   return {
-    currentUser    : loadUser.user,
-    feeds          : allFeed,
-    feedTotalCount : allFeedCount,
-    isLoading      : projectTopics.isLoading,
-    isCreatingFeed : projectTopics.isCreatingFeed,
-    error          : projectTopics.error,
-    allMembers     : members.members,
-    projectMembers : _.keyBy(projectMembers, 'userId'),
-    notifications,
+    notifications: preRenderNotifications(notifications.notifications),
+    feeds: allFeed,
+    isFeedsLoading: projectTopics.isLoading,
+    allMembers,
+    projectMembers,
     canAccessPrivatePosts,
+    currentUser: loadUser.user
   }
 }
+
 const mapDispatchToProps = {
+  toggleNotificationRead,
+  toggleBundledNotificationRead,
   loadDashboardFeeds,
   loadProjectMessages,
-  createProjectTopic,
   saveProjectTopic,
   deleteProjectTopic,
   loadFeedComments,
   addFeedComment,
   saveFeedComment,
   deleteFeedComment,
-  getFeedComment,
-  toggleNotificationRead,
+  getFeedComment
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FeedContainer)
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(MessagesContainer))

@@ -1,0 +1,50 @@
+@import '~tc-ui/src/styles/tc-includes';
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10*$base-unit;
+}
+
+.title {
+  margin-left: 4*$base-unit;
+  @include roboto-bold;
+  font-size: $tc-heading-sm;
+  line-height: 6*$base-unit;
+  color: $tc-gray-90;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.filter-btn {
+  @include roboto;
+  font-size: 12px;
+  line-height: 6*$base-unit;
+  color: $tc-gray-50;
+  padding: 0 10px;
+  display: inline-block;
+  border-radius: 15px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.filter-btn.active {
+  background-color: $tc-gray-05;
+  color: $tc-gray-90;
+  font-weight: 700;
+}
+
+.filter-badge {
+  @include roboto-bold;
+  font-size: 10px;
+  line-height: 12px;
+  color: $tc-white;
+  text-align: center;
+  background-color: $tc-gray-30;
+  border-radius: 9px;
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  margin-left: 5px;
+}

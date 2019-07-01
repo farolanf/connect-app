@@ -1,0 +1,10 @@
+.close-btn {
+  cursor: pointer;
+}
+
+.drawer-content {
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  z-index: 2;
+}

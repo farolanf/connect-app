@@ -13,7 +13,8 @@ import { EVENT_TYPE, PROJECT_FEED_TYPE_MESSAGES, PROJECT_ROLE_CUSTOMER } from '.
 
 import XMarkIcon from '../../assets/icons/x-mark.svg'
 import FullscreenIcon from '../../assets/icons/ui-fullscreen.svg'
-import LockIcon from '../../assets/icons/lock.svg'
+import InvisibleIcon from '../../assets/icons/invisible.svg'
+import CloseIcon from 'appirio-tech-react-components/components/Icons/CloseIcon'
 
 import './Feed.scss'
 
@@ -99,7 +100,7 @@ class Feed extends React.Component {
       id, user, currentUser, topicMessage, totalComments, hasMoreComments, onLoadMoreComments, isLoadingComments,
       allowComments, comments, children, onNewCommentChange, onAddNewComment, isAddingComment, onSaveMessageChange,
       onEditMessage, onSaveMessage, isSavingTopic, onDeleteMessage, onDeleteTopic, isDeletingTopic, error, allMembers,
-      onEnterFullscreenClick, onExitFullscreenClick, isFullScreen, commentId, projectMembers, commentAnchorPrefix, tag
+      onEnterFullscreenClick, onExitFullscreenClick, isFullScreen, commentId, projectMembers, commentAnchorPrefix, tag, onClose
     } = this.props
     const { editTopicMode, headerHeight } = this.state
     let authorName = user ? user.firstName : 'Unknown'
@@ -113,7 +114,7 @@ class Feed extends React.Component {
       const self = user && user.userId === currentUser.userId
       const title = this.props.newTitle === null || this.props.newTitle === undefined ? this.props.title : this.props.newTitle
       const content = topicMessage.newContent === null || topicMessage.newContent === undefined ? topicMessage.rawContent : topicMessage.newContent
-      const feedLink = window.location.pathname.substr(0, window.location.pathname.indexOf('#')) + `#feed-${id}`
+      const feedLink = window.location.pathname
 
       topicHeader = (
         <header styleName={'feed-header' + (isPrivate ? ' is-private' : '' )} ref="header">
@@ -121,28 +122,27 @@ class Feed extends React.Component {
             id={`topic-${id}`}
             criteria={{ eventType: EVENT_TYPE.TOPIC.CREATED, contents: { topicId: id } }}
           />
-          {editTopicMode ? (
-            <div styleName="header-edit">
-              <RichTextArea
-                editMode
-                messageId={topicMessage.id}
-                isGettingComment={topicMessage.isGettingComment}
-                content={content}
-                title={title}
-                oldTitle={this.props.title}
-                onPost={this.onSaveTopic}
-                onPostChange={this.onTopicChange}
-                isCreating={isSavingTopic}
-                hasError={error}
-                cancelEdit={this.cancelEditTopic}
-                disableContent
-                editingTopic = {editTopicMode}
-              />
-            </div>
-          ) : (
-            <div styleName="header-view">
-              <div styleName="header-view-inner">
-                {isPrivate && <div styleName="lock-icon"><LockIcon /></div>}
+          <div styleName="header-view">
+            <div styleName="header-view-inner">
+              {isPrivate && !editTopicMode && <div styleName="lock-icon"><InvisibleIcon /></div>}
+              {editTopicMode ? (
+                <RichTextArea
+                  editMode
+                  compactMode
+                  messageId={topicMessage.id}
+                  isGettingComment={topicMessage.isGettingComment}
+                  content={content}
+                  title={title}
+                  oldTitle={this.props.title}
+                  onPost={this.onSaveTopic}
+                  onPostChange={this.onTopicChange}
+                  isCreating={isSavingTopic}
+                  hasError={error}
+                  cancelEdit={this.cancelEditTopic}
+                  disableContent
+                  editingTopic = {editTopicMode}
+                />
+              ) : (
                 <div styleName="header-info">
                   <div styleName="title">{title}</div>
                   <div styleName="header-details">
@@ -150,21 +150,22 @@ class Feed extends React.Component {
                     <span>{comments.length} post{comments.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                <div styleName="header-actions">
-                  {self && !isFullScreen && (
-                    <CommentEditToggle
-                      forTopic
-                      hideDelete={comments.length > 1}
-                      onEdit={this.onEditTopic}
-                      onDelete={onDeleteTopic}
-                    />
-                  )}
-                  {!!onEnterFullscreenClick && <button styleName="fullscreen" onClick={onEnterFullscreenClick}><FullscreenIcon /></button>}
-                  {!!onExitFullscreenClick && <button styleName="fullscreen fullscreen-exit" onClick={onExitFullscreenClick}><XMarkIcon /></button>}
-                </div>
+              )}
+              <div styleName="header-actions">
+                {self && !isFullScreen && !editTopicMode && (
+                  <CommentEditToggle
+                    forTopic
+                    hideDelete={comments.length > 1}
+                    onEdit={this.onEditTopic}
+                    onDelete={onDeleteTopic}
+                  />
+                )}
+                {!!onEnterFullscreenClick && <button styleName="fullscreen" onClick={onEnterFullscreenClick}><FullscreenIcon /></button>}
+                {!!onExitFullscreenClick && <button styleName="fullscreen fullscreen-exit" onClick={onExitFullscreenClick}><XMarkIcon /></button>}
+                {!!onClose && <button styleName="close-btn" onClick={onClose}><CloseIcon /></button>}
               </div>
             </div>
-          )}
+          </div>
         </header>
       )
     }
@@ -241,6 +242,7 @@ Feed.propTypes = {
   onEnterFullscreenClick: PropTypes.func,
   isFullScreen: PropTypes.bool,
   commentAnchorPrefix: PropTypes.string,
+  onClose: PropTypes.func
 }
 
 export default Feed

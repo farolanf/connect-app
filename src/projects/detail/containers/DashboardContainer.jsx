@@ -28,7 +28,6 @@ import { addProductAttachment, updateProductAttachment, removeProductAttachment 
 
 import MediaQuery from 'react-responsive'
 import ProjectInfoContainer from './ProjectInfoContainer'
-import FeedContainer from './FeedContainer'
 import Sticky from '../../../components/Sticky'
 import { SCREEN_BREAKPOINT_MD } from '../../../config/constants'
 import TwoColsLayout from '../../../components/TwoColsLayout'
@@ -252,12 +251,6 @@ class DashboardContainer extends React.Component {
               collapseProjectPhase={collapseProjectPhase}
             />
           }
-
-          <FeedContainer
-            currentMemberRole={currentMemberRole}
-            project={project}
-            isSuperUser={isSuperUser}
-          />
         </TwoColsLayout.Content>
       </TwoColsLayout>
     )
