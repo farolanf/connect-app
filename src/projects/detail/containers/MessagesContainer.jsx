@@ -58,7 +58,7 @@ class MessagesContainer extends React.Component {
 
     this.state = {
       open: false,
-      feed: null,
+      feedId: null,
       feeds: [],
       showAll: []
     }
@@ -150,7 +150,7 @@ class MessagesContainer extends React.Component {
     if (match.params.topicId) {
       const topicId = Number(match.params.topicId)
       const feed = _.find(mappedFeeds, { id: topicId })
-      this.setState({ feed, open: true })
+      this.setState({ feedId: feed.id, open: true })
     } else if ((location.pathname + location.hash).match(/messages#comment-\d+/)) {
       // handle temporary path "/projects/:projectId/messages#comment-:postId"
       // that's a redirect from "/projects/:projectId/#comment-:postId"
@@ -305,16 +305,14 @@ class MessagesContainer extends React.Component {
       const commentIdsToRetrieve = _.filter(feed.postIds, _id => retrievedPostIds.indexOf(_id) === -1 )
       this.setState(update(this.state, {
         showAll: { $push: [feedId] },
-        feeds: { $splice: [[stateFeedIdx, 1, updatedFeed ]] },
-        feed: { $set: this.state.feed.id === feed.id ? updatedFeed : this.state.feed }
+        feeds: { $splice: [[stateFeedIdx, 1, updatedFeed ]] }
       }))
       this.props.loadFeedComments(feedId, feed.tag, commentIdsToRetrieve)
     } else {
       const mappedFeed = this.mapFeed(feed, true)
       this.setState(update(this.state, {
         showAll: { $push: [feedId] },
-        feeds: { $splice: [[stateFeedIdx, 1, mappedFeed ]] },
-        feed: { $set: this.state.feed.id === feed.id ? mappedFeed : this.state.feed }
+        feeds: { $splice: [[stateFeedIdx, 1, mappedFeed ]] }
       }))
     }
   }
@@ -423,7 +421,8 @@ class MessagesContainer extends React.Component {
       isFeedsLoading
     } = this.props
 
-    const { feed } = this.state
+    const { feedId } = this.state
+    const feed = _.find(this.state.feeds, { id: feedId })
 
     // system notifications
     const notReadNotifications = filterReadNotifications(notifications)
