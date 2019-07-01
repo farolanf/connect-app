@@ -22,6 +22,9 @@ import { getAvatarResized } from '../../helpers/tcHelpers'
 import SwitchButton from 'appirio-tech-react-components/components/SwitchButton/SwitchButton'
 import EditLinkPopoverWrapper from './LinkPlugin/EditLinkPopoverWrapper/EditLinkPopoverWrapper'
 
+import SaveIcon from '../../assets/icons/icon-save.svg'
+import CloseIcon from '../../assets/icons/icon-close.svg'
+
 import {
   FILE_PICKER_API_KEY,
   FILE_PICKER_CNAME, FILE_PICKER_FROM_SOURCES,
@@ -387,7 +390,7 @@ class RichTextArea extends React.Component {
   }
   render() {
     const {MentionSuggestions} = this.mentionPlugin
-    const {className, avatarUrl, authorName, titlePlaceholder, contentPlaceholder, editMode, isCreating,
+    const {className, avatarUrl, authorName, titlePlaceholder, contentPlaceholder, editMode, isCreating, compactMode,
       isGettingComment, disableTitle, disableContent, expandedTitlePlaceholder, editingTopic, hasPrivateSwitch, canUploadAttachment, attachments } = this.props
     const {editorExpanded, editorState, titleValue, oldMDContent, currentMDContent, uploading, isPrivate, isAddLinkOpen, rawFiles, files} = this.state
     let canSubmit = (disableTitle || titleValue.trim())
@@ -426,7 +429,7 @@ class RichTextArea extends React.Component {
     }
 
     return (
-      <div className={cn(className, 'rich-editor', { expanded: editorExpanded || editMode }, { 'is-private': isPrivate })} ref="richEditor">
+      <div className={cn(className, 'rich-editor', { expanded: editorExpanded || editMode }, { 'is-private': isPrivate }, compactMode && 'compact')} ref="richEditor">
         {(isCreating || isGettingComment) &&
           <div className="editing-layer" />
         }
@@ -450,6 +453,20 @@ class RichTextArea extends React.Component {
               onChange={this.onTitleChange}
               placeholder={editorExpanded ? expandedTitlePlaceholder : titlePlaceholder || 'Title of the post'}
             />
+            {compactMode &&
+              <div className="compact-btns">
+                {editMode &&
+                  <button className="compact-btn compact-btn-primary" onClick={this.onPost} disabled={!canSubmit}>
+                    <SaveIcon />
+                  </button>
+                }
+                {editMode && !isCreating &&
+                  <button className="compact-btn compact-btn-default" onClick={this.cancelEdit}>
+                    <CloseIcon />
+                  </button>
+                }
+              </div>
+            }
             <div className="draftjs-editor tc-textarea">
               {!disableContent && !isGettingComment &&
                 <div>
@@ -608,6 +625,7 @@ class RichTextArea extends React.Component {
 
 RichTextArea.propTypes = {
   expandedTitlePlaceholder: PropTypes.string,
+  compactMode: PropTypes.bool,
   onPost: PropTypes.func.isRequired,
   onPostChange: PropTypes.func.isRequired,
   cancelEdit: PropTypes.func,

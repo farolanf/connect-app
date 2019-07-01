@@ -122,28 +122,27 @@ class Feed extends React.Component {
             id={`topic-${id}`}
             criteria={{ eventType: EVENT_TYPE.TOPIC.CREATED, contents: { topicId: id } }}
           />
-          {editTopicMode ? (
-            <div styleName="header-edit">
-              <RichTextArea
-                editMode
-                messageId={topicMessage.id}
-                isGettingComment={topicMessage.isGettingComment}
-                content={content}
-                title={title}
-                oldTitle={this.props.title}
-                onPost={this.onSaveTopic}
-                onPostChange={this.onTopicChange}
-                isCreating={isSavingTopic}
-                hasError={error}
-                cancelEdit={this.cancelEditTopic}
-                disableContent
-                editingTopic = {editTopicMode}
-              />
-            </div>
-          ) : (
-            <div styleName="header-view">
-              <div styleName="header-view-inner">
-                {isPrivate && <div styleName="lock-icon"><InvisibleIcon /></div>}
+          <div styleName="header-view">
+            <div styleName="header-view-inner">
+              {isPrivate && !editTopicMode && <div styleName="lock-icon"><InvisibleIcon /></div>}
+              {editTopicMode ? (
+                <RichTextArea
+                  editMode
+                  compactMode
+                  messageId={topicMessage.id}
+                  isGettingComment={topicMessage.isGettingComment}
+                  content={content}
+                  title={title}
+                  oldTitle={this.props.title}
+                  onPost={this.onSaveTopic}
+                  onPostChange={this.onTopicChange}
+                  isCreating={isSavingTopic}
+                  hasError={error}
+                  cancelEdit={this.cancelEditTopic}
+                  disableContent
+                  editingTopic = {editTopicMode}
+                />
+              ) : (
                 <div styleName="header-info">
                   <div styleName="title">{title}</div>
                   <div styleName="header-details">
@@ -151,22 +150,22 @@ class Feed extends React.Component {
                     <span>{comments.length} post{comments.length !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
-                <div styleName="header-actions">
-                  {self && !isFullScreen && (
-                    <CommentEditToggle
-                      forTopic
-                      hideDelete={comments.length > 1}
-                      onEdit={this.onEditTopic}
-                      onDelete={onDeleteTopic}
-                    />
-                  )}
-                  {!!onEnterFullscreenClick && <button styleName="fullscreen" onClick={onEnterFullscreenClick}><FullscreenIcon /></button>}
-                  {!!onExitFullscreenClick && <button styleName="fullscreen fullscreen-exit" onClick={onExitFullscreenClick}><XMarkIcon /></button>}
-                  {!!onClose && <button styleName="close-btn" onClick={onClose}><CloseIcon /></button>}
-                </div>
+              )}
+              <div styleName="header-actions">
+                {self && !isFullScreen && !editTopicMode && (
+                  <CommentEditToggle
+                    forTopic
+                    hideDelete={comments.length > 1}
+                    onEdit={this.onEditTopic}
+                    onDelete={onDeleteTopic}
+                  />
+                )}
+                {!!onEnterFullscreenClick && <button styleName="fullscreen" onClick={onEnterFullscreenClick}><FullscreenIcon /></button>}
+                {!!onExitFullscreenClick && <button styleName="fullscreen fullscreen-exit" onClick={onExitFullscreenClick}><XMarkIcon /></button>}
+                {!!onClose && <button styleName="close-btn" onClick={onClose}><CloseIcon /></button>}
               </div>
             </div>
-          )}
+          </div>
         </header>
       )
     }

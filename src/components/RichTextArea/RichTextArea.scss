@@ -34,6 +34,31 @@
            when we put very long line without spaces,
            see issue https://github.com/appirio-tech/connect-app/issues/2661 */
         overflow: hidden;
+        position: relative;
+
+        .compact-btns {
+          position: absolute;
+          top: 50%;
+          right: 4px;
+          transform: translateY(-50%);
+          display: flex;
+          height: 32px;
+          border-radius: 3px;
+          background-color: $tc-gray-10;
+          overflow: hidden;
+
+          .compact-btn {
+            border: 0;
+            padding: 8px 14px;
+            line-height: 1;
+
+            &.compact-btn-primary {
+              path {
+                fill: $tc-light-blue-110;
+              }
+            }
+          }
+        }
       }
 
       .portrait + .object {
@@ -254,6 +279,19 @@
               margin-right: 2 * $base-unit;
             }
           }
+        }
+      }
+    }
+
+    &.compact {
+      margin-top: -5px;
+      padding: 0;
+  
+      .modal-row {
+        padding: 0;
+  
+        .textarea-footer {
+          display: none;
         }
       }
     }
