@@ -30,9 +30,11 @@ const projectDetailRedirects = cb => ({ location, match }) => {
     return <Redirect to={`/projects/${match.params.projectId}/messages/${m[1]}`} />
   }
   // Redirect "/projects/:projectId/#comment-:postId"
-  // to "/projects/:projectId/messages#comment-:postId"
+  // to temporary path "/projects/:projectId/messages#comment-:postId"
   // instead to "/projects/:projectId/messages/:topicId#comment-:postId"
   // because there's no topicId param in the original path.
+  // Later, the route component will handle final redirect when it has
+  // loaded topics and find the corresponding one based on postId.
   if ((location.pathname + location.hash).match(/\/projects\/\d+\/#comment-\d+\/?$/)) {
     m = location.hash.match(/#comment-(\d+)$/)
     if (m) {
