@@ -431,7 +431,7 @@ class MessagesContainer extends React.Component {
     const sortedUnreadProjectUpdates = _.orderBy(unreadProjectUpdate, ['date'], ['desc'])
 
     const leftArea = (
-      <div>Sidebar placeholder</div>
+      <div />
     )
 
     return (
