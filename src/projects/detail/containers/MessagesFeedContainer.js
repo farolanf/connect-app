@@ -46,7 +46,7 @@ const isPrivateFeed = feed => feed.tag === PROJECT_FEED_TYPE_MESSAGES
 
 const getLatestMsgDate = feed => {
   if (feed.posts && feed.posts.length) {
-    return feed.posts[0].date
+    return feed.posts[feed.posts.length - 1].date
   }
 }
 
@@ -137,7 +137,7 @@ class FeedView extends React.Component {
   getLastMsgAuthorName(feed) {
     const { allMembers } = this.props
     if (allMembers) {
-      const msg = feed.posts.length && feed.posts[0]
+      const msg = feed.posts.length && feed.posts[feed.posts.length - 1]
       if (msg) {
         const user = allMembers[msg.userId]
         if (user) {

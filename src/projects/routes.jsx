@@ -21,7 +21,7 @@ import { requiresAuthentication } from '../components/AuthenticatedComponent'
 const ProjectLayoutWithAuth = requiresAuthentication(ProjectLayout)
 const FileDownloadWithAuth = requiresAuthentication(FileDownload)
 
-const projectDetailRedirects = cb => ({ location, match }) => {
+const projectDetailRedirects = renderRoutes => ({ location, match }) => {
   let m
   // Redirect "/projects/:projectId/#feed-:topicId"
   // to "/projects/:projectId/messages/:topicId"
@@ -41,7 +41,7 @@ const projectDetailRedirects = cb => ({ location, match }) => {
       return <Redirect to={`/projects/${match.params.projectId}/messages#comment-${m[1]}`} />
     }
   }
-  return cb()
+  return renderRoutes()
 }
 
 const ProjectDetailWithAuth = withProps({ main:
