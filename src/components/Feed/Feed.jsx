@@ -114,7 +114,7 @@ class Feed extends React.Component {
       const self = user && user.userId === currentUser.userId
       const title = this.props.newTitle === null || this.props.newTitle === undefined ? this.props.title : this.props.newTitle
       const content = topicMessage.newContent === null || topicMessage.newContent === undefined ? topicMessage.rawContent : topicMessage.newContent
-      const feedLink = window.location.pathname.substr(0, window.location.pathname.indexOf('#')) + `#feed-${id}`
+      const feedLink = window.location.pathname
 
       topicHeader = (
         <header styleName={'feed-header' + (isPrivate ? ' is-private' : '' )} ref="header">
