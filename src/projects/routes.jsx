@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Switch } from 'react-router-dom'
+import { Route, Switch, Redirect } from 'react-router-dom'
 import { withProps } from 'recompose'
 import { renderApp } from '../components/App/App'
 import ProjectLayout from './detail/components/ProjectLayout'
@@ -21,18 +21,42 @@ import { requiresAuthentication } from '../components/AuthenticatedComponent'
 const ProjectLayoutWithAuth = requiresAuthentication(ProjectLayout)
 const FileDownloadWithAuth = requiresAuthentication(FileDownload)
 
+const projectDetailRedirects = cb => ({ location, match }) => {
+  let m
+  // Redirect "/projects/:projectId/#feed-:topicId"
+  // to "/projects/:projectId/messages/:topicId"
+  m = location.hash.match(/#feed-(\d+)$/)
+  if (m) {
+    return <Redirect to={`/projects/${match.params.projectId}/messages/${m[1]}`} />
+  }
+  // Redirect "/projects/:projectId/#comment-:postId"
+  // to "/projects/:projectId/messages#comment-:postId"
+  // instead to "/projects/:projectId/messages/:topicId#comment-:postId"
+  // because there's no topicId param in the original path.
+  if ((location.pathname + location.hash).match(/\/projects\/\d+\/#comment-\d+\/?$/)) {
+    m = location.hash.match(/#comment-(\d+)$/)
+    if (m) {
+      return <Redirect to={`/projects/${match.params.projectId}/messages#comment-${m[1]}`} />
+    }
+  }
+  return cb()
+}
+
 const ProjectDetailWithAuth = withProps({ main:
-  <Switch>
-    <Route exact path="/projects/:projectId" render={() => <ProjectDetail component={Dashboard} />} />
-    <Route path="/projects/:projectId/messages/:topicId" render={() => <ProjectDetail component={Messages} />} />
-    <Route path="/projects/:projectId/messages" render={() => <ProjectDetail component={Messages} />} />
-    <Route path="/projects/:projectId/status/:statusId" render={() => <ProjectDetail component={Dashboard} />} />
-    <Route path="/projects/:projectId/specification" render={() => <ProjectDetail component={SpecificationContainer} />} />
-    <Route path="/projects/:projectId/scope" render={() => <ProjectDetail component={Scope} />} />
-    <Route path="/projects/:projectId/plan" render={() => <ProjectDetail component={ProjectPlan} />} />
-    <Route path="/projects/:projectId/add-phase" render={() => <ProjectDetail component={ProjectAddPhaseContainer} />} />
-    <Route render={() => <CoderBot code={404}/>} />
-  </Switch>
+  <Route path="/projects/:projectId" render={projectDetailRedirects(() => (
+    <Switch>
+      <Route exact path="/projects/:projectId" render={() => <ProjectDetail component={Dashboard} />} />
+      <Route path="/projects/:projectId/messages/:topicId" render={() => <ProjectDetail component={Messages} />} />
+      <Route path="/projects/:projectId/messages" render={() => <ProjectDetail component={Messages} />} />
+      <Route path="/projects/:projectId/status/:statusId" render={() => <ProjectDetail component={Dashboard} />} />
+      <Route path="/projects/:projectId/specification" render={() => <ProjectDetail component={SpecificationContainer} />} />
+      <Route path="/projects/:projectId/scope" render={() => <ProjectDetail component={Scope} />} />
+      <Route path="/projects/:projectId/plan" render={() => <ProjectDetail component={ProjectPlan} />} />
+      <Route path="/projects/:projectId/add-phase" render={() => <ProjectDetail component={ProjectAddPhaseContainer} />} />
+      <Route render={() => <CoderBot code={404}/>} />
+    </Switch>
+  ))}
+  />
 })(ProjectLayoutWithAuth)
 
 const ProjectsWithAuth = requiresAuthentication(Projects)

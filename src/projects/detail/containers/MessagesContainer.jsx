@@ -123,7 +123,7 @@ class MessagesContainer extends React.Component {
   }
 
   init(props, prevProps) {
-    const { match, feeds } = props
+    const { location, match, feeds } = props
 
     let resetNewPost = false
     if (prevProps) {
@@ -151,6 +151,18 @@ class MessagesContainer extends React.Component {
       const topicId = Number(match.params.topicId)
       const feed = _.find(mappedFeeds, { id: topicId })
       this.setState({ feed, open: true })
+    } else if (location.hash.match(/#comment-\d+/)) {
+      // handle path "/projects/:projectId/messages#comment-:postId"
+      // that's a redirect from "/projects/:projectId/#comment-:postId"
+      // which doesn't have topicId param.
+
+      // Set active feed based on postId
+      const m = location.hash.match(/#comment-(\d+)/)
+      if (m) {
+        const postId = Number(m[1])
+        const feed = _.find(mappedFeeds, feed => feed.postIds.includes(postId))
+        feed && this.setState({ feed, open: true })
+      }
     } else {
       this.setState({ open: false })
     }
