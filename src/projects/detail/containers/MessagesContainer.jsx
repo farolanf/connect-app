@@ -475,6 +475,7 @@ class MessagesContainer extends React.Component {
               open={this.state.open}
               containerStyle={{top: '110px', height: 'calc(100% - 110px)', display: 'flex', flexDirection: 'column' }}
               overlayStyle={{top: '110px', left: '360px'}}
+              noHeader
               onRequestChange={this.toggleDrawer}
               processing={isFeedsLoading || !feed}
               {...{
@@ -494,7 +495,7 @@ class MessagesContainer extends React.Component {
                 onTopicChange: this.onTopicChange,
                 onSaveTopic: this.onSaveTopic,
                 onDeleteTopic: this.onDeleteTopic,
-                enterFullscreen: () => null
+                onClose: () => this.toggleDrawer(false)
               }}
             />
           )}

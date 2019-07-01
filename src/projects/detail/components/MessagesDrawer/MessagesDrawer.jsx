@@ -29,19 +29,22 @@ class MessagesDrawer extends Component {
       projectMembers,
       currentMemberRole,
       onRequestChange,
+      noHeader
     } = this.props
     return (
       <Drawer {...this.props}>
-        <Toolbar style={{position: 'relative', zIndex: 3}}>
-          <ToolbarGroup>
-            <ToolbarTitle text="Project Scope" />
-          </ToolbarGroup>
-          <ToolbarGroup>
-            <span styleName="close-btn" onClick={() => {onRequestChange(false)}}>
-              <CloseIcon />
-            </span>
-          </ToolbarGroup>
-        </Toolbar>
+        {!noHeader && (
+          <Toolbar style={{position: 'relative', zIndex: 3}}>
+            <ToolbarGroup>
+              <ToolbarTitle text="Project Scope" />
+            </ToolbarGroup>
+            <ToolbarGroup>
+              <span styleName="close-btn" onClick={() => {onRequestChange(false)}}>
+                <CloseIcon />
+              </span>
+            </ToolbarGroup>
+          </Toolbar>
+        )}
         <div styleName="drawer-content">
           {(
             <EnhancedSingleFeedContainer
@@ -62,7 +65,8 @@ class MessagesDrawer extends Component {
                 onTopicChange: this.props.onTopicChange,
                 onSaveTopic: this.props.onSaveTopic,
                 onDeleteTopic: this.props.onDeleteTopic,
-                onEnterFullscreenClick: this.props.enterFullscreen
+                onEnterFullscreenClick: this.props.enterFullscreen,
+                onClose: this.props.onClose
               }}
             />
           )}
@@ -93,6 +97,7 @@ MessagesDrawer.propTypes = {
     PT.number
   ]),
   zDepth: PT.number, // The zDepth of the `Drawer`.
+  noHeader: PT.bool,
 
   processing: PT.bool.isRequired,
   feed: PT.object,
@@ -111,7 +116,8 @@ MessagesDrawer.propTypes = {
   onTopicChange: PT.func.isRequired,
   onSaveTopic: PT.func.isRequired,
   onDeleteTopic: PT.func.isRequired,
-  enterFullscreen: PT.func.isRequired
+  enterFullscreen: PT.func,
+  onClose: PT.func
 }
 
 export default MessagesDrawer

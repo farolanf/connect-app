@@ -36,6 +36,8 @@ class SingleFeedContainer extends React.Component {
     super(props)
 
     bindMethods.forEach((method) => {
+      // Ignore unspecified method
+      if (typeof this.props[method] !== 'function') return
       // We cannot use an arrow function here, as later other component can apply .bind to these methods
       this[method] = function() {
         // we cannot use .bind here as we already bound "this" in these methods to another React component and we don't want to override it

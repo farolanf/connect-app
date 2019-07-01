@@ -13,7 +13,8 @@ import { EVENT_TYPE, PROJECT_FEED_TYPE_MESSAGES, PROJECT_ROLE_CUSTOMER } from '.
 
 import XMarkIcon from '../../assets/icons/x-mark.svg'
 import FullscreenIcon from '../../assets/icons/ui-fullscreen.svg'
-import LockIcon from '../../assets/icons/lock.svg'
+import InvisibleIcon from '../../assets/icons/invisible.svg'
+import CloseIcon from 'appirio-tech-react-components/components/Icons/CloseIcon'
 
 import './Feed.scss'
 
@@ -99,7 +100,7 @@ class Feed extends React.Component {
       id, user, currentUser, topicMessage, totalComments, hasMoreComments, onLoadMoreComments, isLoadingComments,
       allowComments, comments, children, onNewCommentChange, onAddNewComment, isAddingComment, onSaveMessageChange,
       onEditMessage, onSaveMessage, isSavingTopic, onDeleteMessage, onDeleteTopic, isDeletingTopic, error, allMembers,
-      onEnterFullscreenClick, onExitFullscreenClick, isFullScreen, commentId, projectMembers, commentAnchorPrefix, tag
+      onEnterFullscreenClick, onExitFullscreenClick, isFullScreen, commentId, projectMembers, commentAnchorPrefix, tag, onClose
     } = this.props
     const { editTopicMode, headerHeight } = this.state
     let authorName = user ? user.firstName : 'Unknown'
@@ -142,7 +143,7 @@ class Feed extends React.Component {
           ) : (
             <div styleName="header-view">
               <div styleName="header-view-inner">
-                {isPrivate && <div styleName="lock-icon"><LockIcon /></div>}
+                {isPrivate && <div styleName="lock-icon"><InvisibleIcon /></div>}
                 <div styleName="header-info">
                   <div styleName="title">{title}</div>
                   <div styleName="header-details">
@@ -161,6 +162,7 @@ class Feed extends React.Component {
                   )}
                   {!!onEnterFullscreenClick && <button styleName="fullscreen" onClick={onEnterFullscreenClick}><FullscreenIcon /></button>}
                   {!!onExitFullscreenClick && <button styleName="fullscreen fullscreen-exit" onClick={onExitFullscreenClick}><XMarkIcon /></button>}
+                  {!!onClose && <button styleName="close-btn" onClick={onClose}><CloseIcon /></button>}
                 </div>
               </div>
             </div>
@@ -241,6 +243,7 @@ Feed.propTypes = {
   onEnterFullscreenClick: PropTypes.func,
   isFullScreen: PropTypes.bool,
   commentAnchorPrefix: PropTypes.string,
+  onClose: PropTypes.func
 }
 
 export default Feed

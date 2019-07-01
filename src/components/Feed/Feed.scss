@@ -59,6 +59,8 @@
   border-bottom: 1px solid $tc-gray-10;
   justify-content: center;
   padding: 4 * $base-unit 4 * $base-unit 3 * $base-unit 4 * $base-unit;
+  background-color: $tc-pastel-green;
+  color: $tc-white;
 
   :global {
     .Dropdown {
@@ -77,15 +79,18 @@
 .header-view-inner {
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .lock-icon {
-  margin: $base-unit / 2 4 * $base-unit 0 0;
+  margin: -4px 4*$base-unit 0 $base-unit;
+  path {
+    fill: $tc-white;
+  }
 }
 
 .title {
   @include roboto;
-  color: $tc-black;
   font-size: 20px;
   margin-bottom: $base-unit;
   padding-right: 4 * $base-unit;
@@ -104,11 +109,10 @@
 
 .header-details {
   @include roboto;
-  color: $tc-gray-50;
   font-size: 11px;
   line-height: 13px;
   margin-bottom: $base-unit;
-  margin-top: $base-unit;
+  margin-top: 4px;
   white-space: nowrap;
 
   > span::before {
@@ -122,15 +126,16 @@
   align-items: flex-start;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  margin-top: -4px;
 
   :global {
     .dropdown-wrap.drop-down {
       display: block;
       margin-left: 3 * $base-unit;
-    }
-
-    .dropdownContainer {
-      margin-top: 5px;
+      i::before {
+        color: $tc-white;
+      }
     }
   }
 }
@@ -155,4 +160,15 @@
       margin: -4px;
     }
   }
+}
+
+.close-btn {
+  border: 0;
+  background-color: transparent;
+  margin-top: -2px;
+  margin-left: 16px;
+  padding: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
