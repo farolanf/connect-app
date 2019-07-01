@@ -25,7 +25,7 @@ const projectDetailRedirects = renderRoutes => ({ location, match }) => {
   let m
   // Redirect "/projects/:projectId/#feed-:topicId"
   // to "/projects/:projectId/messages/:topicId"
-  m = location.hash.match(/#feed-(\d+)$/)
+  m = (location.pathname + location.hash).match(/\/projects\/\d+\/?#feed-(\d+)$/)
   if (m) {
     return <Redirect to={`/projects/${match.params.projectId}/messages/${m[1]}`} />
   }
@@ -35,7 +35,7 @@ const projectDetailRedirects = renderRoutes => ({ location, match }) => {
   // because there's no topicId param in the original path.
   // Later, the route component will handle final redirect when it has
   // loaded topics and find the corresponding one based on postId.
-  if ((location.pathname + location.hash).match(/\/projects\/\d+\/#comment-\d+\/?$/)) {
+  if ((location.pathname + location.hash).match(/\/projects\/\d+\/?#comment-\d+\/?$/)) {
     m = location.hash.match(/#comment-(\d+)$/)
     if (m) {
       return <Redirect to={`/projects/${match.params.projectId}/messages#comment-${m[1]}`} />

@@ -150,7 +150,7 @@ class MessagesContainer extends React.Component {
     if (match.params.topicId) {
       const topicId = Number(match.params.topicId)
       const feed = _.find(mappedFeeds, { id: topicId })
-      this.setState({ feedId: feed.id, open: true })
+      feed && this.setState({ feedId: feed.id, open: true })
     } else if ((location.pathname + location.hash).match(/messages#comment-\d+/)) {
       // handle temporary path "/projects/:projectId/messages#comment-:postId"
       // that's a redirect from "/projects/:projectId/#comment-:postId"
@@ -251,7 +251,7 @@ class MessagesContainer extends React.Component {
     item.hasMoreComments = item.comments.length !== item.totalComments
     // adds permalink for the feed
     // item.permalink = `/projects/${project.id}/status/${item.id}`
-    item.permalink = `/projects/${project.id}#feed-${item.id}`
+    item.permalink = `/projects/${project.id}/messages/${item.id}`
     return item
   }
 
