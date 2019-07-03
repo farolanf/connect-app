@@ -1,0 +1,79 @@
+@import '~tc-ui/src/styles/tc-includes';
+
+.root {
+  @include roboto;
+  margin-top: 6*$base-unit;
+  padding: 4*$base-unit 4*$base-unit 7.4*$base-unit 4*$base-unit;
+  border-radius: 2*$base-unit;
+  box-shadow: 0 2px 6px 1px $tc-gray-neutral-dark;
+  background-color: $tc-white;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.title {
+  color: $tc-gray-90;
+  @include roboto-bold;
+  font-size: 4*$base-unit;
+  line-height: 6*$base-unit;
+  text-transform: uppercase;
+}
+
+.tabs {
+  margin-top: 4*$base-unit;
+  display: flex;
+}
+
+.tab-btn {
+  display: inline-block;
+  @include roboto;
+  font-size: 3.2*$base-unit;
+  line-height: 6*$base-unit;
+  border-radius: 4*$base-unit;
+  background-color: transparent;
+  color: $tc-gray-50;
+  display: flex;
+  align-items: center;
+  padding: 0 3*$base-unit;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  @include roboto-bold;
+  background-color: $tc-gray-neutral-dark;
+  color: $tc-gray-90;
+}
+
+.tab-btn:not(:last-child) {
+  margin-right: $base-unit;
+}
+
+.badge {
+  @include roboto-bold;
+  font-size: 2*$base-unit;
+  line-height: 2.4*$base-unit;
+  border-radius: 9px;
+  background-color: $tc-gray-50;
+  color: $tc-white;
+  margin-left: $base-unit;
+  padding: .2*$base-unit $base-unit;
+}
+
+.badge.active {
+  background-color: $tc-gray-90;
+}
+
+.section-title {
+  margin-top: 6*$base-unit;
+  color: $tc-gray-90;
+  @include roboto-bold;
+  font-size: 3.2*$base-unit;
+  line-height: 4*$base-unit;
+}
+
+.section {
+  margin-top: 26px;
+}

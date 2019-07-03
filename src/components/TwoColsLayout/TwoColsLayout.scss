@@ -44,9 +44,9 @@
 }
 
 .content {
-  padding-bottom: 4 * $base-unit;
-  padding-left: 4 * $base-unit;
-  padding-right: 4 * $base-unit;
+  padding-bottom: 6 * $base-unit;
+  padding-left: 8 * $base-unit;
+  padding-right: 8 * $base-unit;
   /* minus sidebar width and minus sidebar border width */
   width: calc(100% - 360px - 1px);
 
@@ -78,7 +78,7 @@
 
 .content-inner {
   margin: 0 auto;
-  max-width: 760px;
+  max-width: 920px;
 
   .no-padding & {
     max-width: 100%;

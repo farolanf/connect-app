@@ -10,6 +10,7 @@ import ProjectToolBar from '../components/TopBar/ProjectToolBar'
 import FileDownload from '../components/FileDownload'
 import ProjectDetail from './detail/ProjectDetail'
 import Dashboard from './detail/containers/DashboardContainer'
+import ProjectAssets from './detail/containers/AssetsLibraryContainer'
 import Scope from './detail/containers/ScopeContainer'
 import ProjectPlan from './detail/containers/ProjectPlanContainer'
 import ProjectAddPhaseContainer from './detail/containers/ProjectAddPhaseContainer'
@@ -30,6 +31,7 @@ const ProjectDetailWithAuth = withProps({ main:
     <Route path="/projects/:projectId/plan" render={() => <ProjectDetail component={ProjectPlan} />} />
     <Route path="/projects/:projectId/add-phase" render={() => <ProjectDetail component={ProjectAddPhaseContainer} />} />
     <Route path="/projects/:projectId/discussions/:discussionId?" render={() => <ProjectDetail component={ProjectMessages} />} />
+    <Route path="/projects/:projectId/assets" render={() => <ProjectDetail component={ProjectAssets} />} />
     <Route render={() => <CoderBot code={404}/>} />
   </Switch>
 })(ProjectLayoutWithAuth)
