@@ -2,6 +2,7 @@ import React, { Component, createElement } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
 import _ from 'lodash'
+import moment from 'moment'
 
 import './Explorer.scss'
 
@@ -21,22 +22,23 @@ const renderIcon = ext => createElement('img', {
 const getExt = name => name.substring(name.lastIndexOf('.') + 1)
 
 /**
- * Descend into tree of folders and get the entries of the last folder specified by path.
- * @param {*} root The tree of files and folders
+ * Descend into the tree and get the entries of the last folder specified by path.
+ * @param {*} entries The tree of links and folders
  * @param {*} path The folder path, eg. /dir1/dir2/dir3/dir4
  */
-const getEntriesOfPath = (root, path) => {
+const getEntriesOfPath = (entries, path) => {
   const folders = path.replace(/^\/|\/$/g, '').split('/')
-  let node = root
   while (folders.length) {
     const name = folders.shift()
     if (!name) continue
-    const folderNode = _.find(node.entries, { name, isFolder: true })
-    if (!folderNode) return
-    node = folderNode
+    const entry = _.find(entries, { id: Number(name) })
+    if (!entry) return
+    entries = entry.children
   }
-  return node.entries
+  return entries
 }
+
+const renderDate = date => date ? moment(date).format('MM/DD/YYYY h:mm A') : '—'
 
 class Explorer extends Component {
 
@@ -53,46 +55,65 @@ class Explorer extends Component {
     this.setState({ path: newPath })
   }
 
-  enterFolder(name) {
-    if (name === '..') return this.goUp()
+  enterFolder(entry) {
+    if (entry.id === -1) return this.goUp()
     const { path } = this.state
-    this.setState({ path: [path, name].join('/') })
+    this.setState({ path: [path, entry.id].join('/') })
   }
 
   renderEntries(entries) {
-    return entries && entries.map((item, i) => (
-      <tr key={i}>
-        <td>{renderIcon(getExt(item.name))}</td>
-        <td
-          styleName={cn(item.isFolder && 'folder')}
-          onClick={() => item.isFolder && this.enterFolder(item.name)}
-        >
-          {item.name}
-        </td>
-        <td>{item.modified || '—'}</td>
-        <td>...</td>
-      </tr>
-    ))
+    // const { loggedInUser } = this.props
+    return entries && entries.map((entry, idx) => {
+      // const onDeleteConfirm = () => {
+      //   onDelete(entry.id)
+      //   onDeleteIntent(-1)
+      // }
+      // const onDeleteCancel = () => onDeleteIntent(-1)
+      // const handleDeleteClick = () => onDeleteIntent(idx)
+
+      // const onEditConfirm = (title, allowedUsers) => {
+      //   onEdit(entry.id, title, allowedUsers)
+      //   onEditIntent(-1)
+      // }
+      // const onEditCancel = () => onEditIntent(-1)
+      // const handleEditClick = () => onEditIntent(idx)
+      // const canEdit = `${entry.createdBy}` === `${loggedInUser.userId}`
+      const isFolder = entry.id === -1 || Array.isArray(entry.children)
+      return (
+        <tr key={idx}>
+          <td>{renderIcon(getExt(entry.title))}</td>
+          <td
+            styleName={cn(isFolder && 'folder')}
+            onClick={() => isFolder && this.enterFolder(entry)}
+          >
+            {isFolder ? entry.title : (
+              <a href={entry.address}>{entry.title}</a>
+            )}
+          </td>
+          <td>{renderDate(entry.updatedDate)}</td>
+          <td>...</td>
+        </tr>
+      )
+    })
   }
 
   render() {
-    const { root } = this.props
+    const { entries } = this.props
     const { path } = this.state
+
     return (
       <table styleName="table">
         <thead>
           <tr>
             <th>Type</th>
-            <th styleName="active desc">Name</th>
+            <th>Name</th>
             <th>Modified</th>
             <th />
           </tr>
         </thead>
         <tbody>
-          {!!path && this.renderEntries([
-            { name: '..', isFolder: true }
-          ])}
-          {this.renderEntries(getEntriesOfPath(root, path))}
+          {!!path && this.renderEntries([{ title: '..', id: -1 }])}
+          {this.renderEntries(getEntriesOfPath(entries, path))}
         </tbody>
       </table>
     )
@@ -100,14 +121,8 @@ class Explorer extends Component {
 }
 
 Explorer.propTypes = {
-  root: PropTypes.shape({
-    entries: PropTypes.arrayOf(PropTypes.shape({
-      name: PropTypes.node,
-      isFolder: PropTypes.bool,
-      modified: PropTypes.node,
-      entries: PropTypes.array,
-    })),
-  }),
+  entries: PropTypes.array,
+  loggedInUser: PropTypes.object.isRequired,
 }
 
 export default Explorer
