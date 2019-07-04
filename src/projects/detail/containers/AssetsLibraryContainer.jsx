@@ -5,12 +5,12 @@ import AssetsLibrary from '../components/AssetsLibrary'
 
 import './AssetsLibraryContainer.scss'
 
-const AssetsLibraryContainer = () => (
+const AssetsLibraryContainer = props => (
   <TwoColsLayout>
     <TwoColsLayout.Sidebar>
     </TwoColsLayout.Sidebar>
     <TwoColsLayout.Content>
-      <AssetsLibrary />
+      <AssetsLibrary {...props} />
     </TwoColsLayout.Content>
   </TwoColsLayout>
 )

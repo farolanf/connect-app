@@ -38,51 +38,6 @@ const getEntriesOfPath = (root, path) => {
   return node.entries
 }
 
-const processUploadedFiles = (fpFiles, category) => {
-  const attachments = []
-  onAddingNewLink(false)
-  fpFiles = _.isArray(fpFiles) ? fpFiles : [fpFiles]
-  _.forEach(fpFiles, f => {
-    const attachment = {
-      title: f.filename,
-      description: '',
-      category,
-      size: f.size,
-      filePath: f.key,
-      contentType: f.mimetype || 'application/unknown'
-    }
-    attachments.push(attachment)
-  })
-  onUploadAttachment(attachments)
-}
-
-const openFileUpload = () => {
-  if (fileUploadClient) {
-    const picker = fileUploadClient.picker({
-      storeTo: {
-        location: 's3',
-        path: attachmentsStorePath,
-        container: FILE_PICKER_SUBMISSION_CONTAINER_NAME,
-        region: 'us-east-1'
-      },
-      maxFiles: 4,
-      fromSources: FILE_PICKER_FROM_SOURCES,
-      uploadInBackground: false,
-      onFileUploadFinished: (files) => {
-        processUploadedFiles(files, category)
-      },
-      onOpen: () => {
-        onAddingNewLink(true)
-      },
-      onClose: () => {
-        onAddingNewLink(false)
-      }
-    })
-
-    picker.open()
-  }
-}
-
 class Explorer extends Component {
 
   constructor(props) {
