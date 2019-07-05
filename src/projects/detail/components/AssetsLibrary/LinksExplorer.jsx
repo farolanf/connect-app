@@ -13,7 +13,6 @@ import cn from 'classnames'
 import BtnRemove from '../../../../assets/icons/ui-16px-1_trash-simple.svg'
 import BtnEdit from '../../../../assets/icons/icon-edit.svg'
 import Explorer from './Explorer'
-import './LinksMenu.scss'
 
 const LinksExplorer = ({
   canAdd,

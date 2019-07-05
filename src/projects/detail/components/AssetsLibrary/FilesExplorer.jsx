@@ -9,7 +9,6 @@ import Panel from '../../../../components/Panel/Panel'
 import MobileExpandable from '../../../../components/MobileExpandable/MobileExpandable'
 import AddFilePermission from '../../../../components/FileList/AddFilePermissions'
 import Explorer from './Explorer'
-import './LinksMenu.scss'
 
 import {
   FILE_PICKER_API_KEY,
@@ -61,25 +60,17 @@ const FilesExplorer = ({
 
   return (
     <div>
-      <MobileExpandable title={`${title} (${links.length})`}>
-        <Panel className={cn({'modal-active': (isAddingNewLink || linkToDelete >= 0)}, 'panel-links-container')}>
-          <Panel.Title>
-            {title} ({links.length})
-          </Panel.Title>
-          {(isAddingNewLink || linkToDelete >= 0) && <div className="modal-overlay"/>}
-          {pendingAttachments &&
-            <AddFilePermission onCancel={discardAttachments}
-              onSubmit={onAddingAttachmentPermissions}
-              onChange={onChangePermissions}
-              selectedUsers={selectedUsers}
-              projectMembers={projectMembers}
-              loggedInUser={loggedInUser}
-              isSharingAttachment={isSharingAttachment}
-            />
-          }
-        </Panel>
-      </MobileExpandable>
-      <Explorer entries={links} loggedInUser={loggedInUser} />
+      {pendingAttachments &&
+        <AddFilePermission onCancel={discardAttachments}
+          onSubmit={onAddingAttachmentPermissions}
+          onChange={onChangePermissions}
+          selectedUsers={selectedUsers}
+          projectMembers={projectMembers}
+          loggedInUser={loggedInUser}
+          isSharingAttachment={isSharingAttachment}
+        />
+      }
+      <Explorer entries={links} loggedInUser={loggedInUser} useFileIcon />
     </div>
   )
 }

@@ -355,7 +355,8 @@ class AssetsLibrary extends Component {
             createdBy: attachment.createdBy,
             postId: post.id,
             topicId: feed.id,
-            topicTag: feed.tag
+            topicTag: feed.tag,
+            updatedDate: attachment.updatedDate
           })
         })
       })
@@ -507,7 +508,8 @@ class AssetsLibrary extends Component {
         title: attachment.title,
         address: attachment.downloadUrl,
         allowedUsers: attachment.allowedUsers,
-        createdBy : attachment.createdBy
+        createdBy : attachment.createdBy,
+        updatedDate: attachment.updatedAt,
       }))
 
     // get list of phase topic in same order as phases

@@ -47,6 +47,7 @@ class Explorer extends Component {
     this.state = {
       path: ''
     }
+    this.onClickFolder = this.onClickFolder.bind(this)
   }
 
   goUp() {
@@ -61,8 +62,12 @@ class Explorer extends Component {
     this.setState({ path: [path, entry.id].join('/') })
   }
 
+  onClickFolder() {
+    document.documentElement.scrollTop = 0
+  }
+
   renderEntries(entries) {
-    // const { loggedInUser } = this.props
+    const { loggedInUser, useFileIcon } = this.props
     return entries && entries.map((entry, idx) => {
       // const onDeleteConfirm = () => {
       //   onDelete(entry.id)
@@ -81,14 +86,15 @@ class Explorer extends Component {
       const isFolder = entry.id === -1 || Array.isArray(entry.children)
       return (
         <tr key={idx}>
-          <td>{renderIcon(getExt(entry.title))}</td>
+          <td>{renderIcon(useFileIcon ? getExt(entry.title) : fileIcon.default)}</td>
           <td
             styleName={cn(isFolder && 'folder')}
             onClick={() => isFolder && this.enterFolder(entry)}
           >
-            {isFolder ? entry.title : (
-              <a href={entry.address}>{entry.title}</a>
-            )}
+            {isFolder ?
+              <span onClick={this.onClickFolder}>{entry.title}</span>
+              : <a href={entry.address}>{entry.title}</a>
+            }
           </td>
           <td>{renderDate(entry.updatedDate)}</td>
           <td>...</td>
@@ -123,6 +129,7 @@ class Explorer extends Component {
 Explorer.propTypes = {
   entries: PropTypes.array,
   loggedInUser: PropTypes.object,
+  useFileIcon: PropTypes.bool,
 }
 
 export default Explorer
