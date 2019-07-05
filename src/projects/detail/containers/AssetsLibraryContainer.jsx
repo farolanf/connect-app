@@ -107,7 +107,6 @@ class AssetsLibraryContainer extends React.Component {
       productsTimelines,
       phasesTopics,
       location,
-      loggedInUser,
     } = this.props
 
     const leftArea = (

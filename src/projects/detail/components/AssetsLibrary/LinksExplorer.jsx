@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import  { Link } from 'react-router-dom'
+
 import Panel from '../../../../components/Panel/Panel'
 import AddLink from '../../../../components/LinksMenu/AddLink'
 import DeleteLinkModal from '../../../../components/LinksMenu/DeleteLinkModal'
@@ -12,8 +13,9 @@ import cn from 'classnames'
 import BtnRemove from '../../../../assets/icons/ui-16px-1_trash-simple.svg'
 import BtnEdit from '../../../../assets/icons/icon-edit.svg'
 import Explorer from './Explorer'
+import './LinksMenu.scss'
 
-const LinksMenu = ({
+const LinksExplorer = ({
   canAdd,
   canDelete,
   canEdit,
@@ -34,35 +36,12 @@ const LinksMenu = ({
   moreText,
   withHash,
 }) => {
-  const renderLink = (link) => {
-    if (link.onClick) {
-      return (
-        <a
-          href={link.address}
-          onClick={(evt) => {
-            // we only prevent default on click,
-            // as we handle clicks with <li>
-            if (!link.allowDefaultOnClick) {
-              evt.preventDefault()
-            }
-          }}
-        >
-          {link.title}
-        </a>
-      )
-    } else if (link.noNewPage) {
-      return <Link to={link.address}>{link.title}</Link>
-    } else {
-      return <a href={link.address} target="_blank" rel="noopener noreferrer">{link.title}</a>
-    }
-  }
-
   return (
     <Explorer entries={links} />
   )
 }
 
-LinksMenu.propTypes = {
+LinksExplorer.propTypes = {
   canAdd: PropTypes.bool,
   canDelete: PropTypes.bool,
   canEdit: PropTypes.bool,
@@ -77,13 +56,13 @@ LinksMenu.propTypes = {
   title: PropTypes.string,
 }
 
-LinksMenu.defaultProps = {
+LinksExplorer.defaultProps = {
   limit: 5,
   moreText: 'load more',
   title: 'Links',
 }
 
-export default uncontrollable(LinksMenu, {
+export default uncontrollable(LinksExplorer, {
   linkToDelete: 'onDeleteIntent',
   linkToEdit: 'onEditIntent',
   isAddingNewLink: 'onAddingNewLink',

@@ -1,11 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import cn from 'classnames'
 import {Link} from 'react-router-dom'
-import * as filepicker from 'filestack-js'
 import _ from 'lodash'
 import uncontrollable from 'uncontrollable'
 
+import Panel from '../../../../components/Panel/Panel'
+import MobileExpandable from '../../../../components/MobileExpandable/MobileExpandable'
+import AddFilePermission from '../../../../components/FileList/AddFilePermissions'
 import Explorer from './Explorer'
+import './LinksMenu.scss'
 
 import {
   FILE_PICKER_API_KEY,
@@ -14,7 +18,7 @@ import {
   FILE_PICKER_SUBMISSION_CONTAINER_NAME
 } from '../../../../config/constants'
 
-const FileLinksMenu = ({
+const FilesExplorer = ({
   noDots,
   isAddingNewLink,
   limit,
@@ -44,49 +48,6 @@ const FileLinksMenu = ({
   onDeletePostAttachment
 }) => {
 
-  const fileUploadClient = filepicker.init(FILE_PICKER_API_KEY, {
-    cname: FILE_PICKER_CNAME
-  })
-
-  const renderLink = (link) => {
-    if (link.onClick) {
-      return (
-        <a
-          href={link.address}
-          onClick={(evt) => {
-            // we only prevent default on click,
-            // as we handle clicks with <li>
-            evt.preventDefault()
-          }}
-        >
-          {link.title}
-        </a>
-      )
-    } else if (link.noNewPage) {
-      return <Link to={link.address}>{link.title}</Link>
-    } else {
-      return <a href={link.address} target="_blank" rel="noopener noreferrer">{link.title}</a>
-    }
-  }
-
-  const processUploadedFiles = (fpFiles, category) => {
-    const attachments = []
-    onAddingNewLink(false)
-    fpFiles = _.isArray(fpFiles) ? fpFiles : [fpFiles]
-    _.forEach(fpFiles, f => {
-      const attachment = {
-        title: f.filename,
-        description: '',
-        category,
-        size: f.size,
-        filePath: f.key,
-        contentType: f.mimetype || 'application/unknown'
-      }
-      attachments.push(attachment)
-    })
-    onUploadAttachment(attachments)
-  }
-
   const onAddingAttachmentPermissions = (allowedUsers) => {
     const { attachments, projectId } = pendingAttachments
     _.forEach(attachments, f => {
@@ -98,39 +59,32 @@ const FileLinksMenu = ({
     })
   }
 
-  const openFileUpload = () => {
-    if (fileUploadClient) {
-      const picker = fileUploadClient.picker({
-        storeTo: {
-          location: 's3',
-          path: attachmentsStorePath,
-          container: FILE_PICKER_SUBMISSION_CONTAINER_NAME,
-          region: 'us-east-1'
-        },
-        maxFiles: 4,
-        fromSources: FILE_PICKER_FROM_SOURCES,
-        uploadInBackground: false,
-        onFileUploadFinished: (files) => {
-          processUploadedFiles(files, category)
-        },
-        onOpen: () => {
-          onAddingNewLink(true)
-        },
-        onClose: () => {
-          onAddingNewLink(false)
-        }
-      })
-
-      picker.open()
-    }
-  }
-
   return (
-    <Explorer entries={links} loggedInUser={loggedInUser} />
+    <div>
+      <MobileExpandable title={`${title} (${links.length})`}>
+        <Panel className={cn({'modal-active': (isAddingNewLink || linkToDelete >= 0)}, 'panel-links-container')}>
+          <Panel.Title>
+            {title} ({links.length})
+          </Panel.Title>
+          {(isAddingNewLink || linkToDelete >= 0) && <div className="modal-overlay"/>}
+          {pendingAttachments &&
+            <AddFilePermission onCancel={discardAttachments}
+              onSubmit={onAddingAttachmentPermissions}
+              onChange={onChangePermissions}
+              selectedUsers={selectedUsers}
+              projectMembers={projectMembers}
+              loggedInUser={loggedInUser}
+              isSharingAttachment={isSharingAttachment}
+            />
+          }
+        </Panel>
+      </MobileExpandable>
+      <Explorer entries={links} loggedInUser={loggedInUser} />
+    </div>
   )
 }
 
-FileLinksMenu.propTypes = {
+FilesExplorer.propTypes = {
   canEdit: PropTypes.bool,
   noDots: PropTypes.bool,
   limit: PropTypes.number,
@@ -153,13 +107,13 @@ FileLinksMenu.propTypes = {
   onDeletePostAttachment: PropTypes.func,
 }
 
-FileLinksMenu.defaultProps = {
+FilesExplorer.defaultProps = {
   limit: 5,
   moreText: 'load more',
   title: 'Links',
 }
 
-export default uncontrollable(FileLinksMenu, {
+export default uncontrollable(FilesExplorer, {
   linkToDelete: 'onDeleteIntent',
   linkToEdit: 'onEditIntent',
   isAddingNewLink: 'onAddingNewLink',

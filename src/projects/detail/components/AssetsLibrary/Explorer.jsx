@@ -122,7 +122,7 @@ class Explorer extends Component {
 
 Explorer.propTypes = {
   entries: PropTypes.array,
-  loggedInUser: PropTypes.object.isRequired,
+  loggedInUser: PropTypes.object,
 }
 
 export default Explorer
