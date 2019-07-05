@@ -76,3 +76,20 @@
 .folder {
   cursor: pointer;
 }
+
+.row-menu-btn {
+  border: 1px solid $tc-gray-10;
+  border-radius: 6px;
+  display: inline-block;
+  line-height: 6px;
+  height: 11px;
+  padding: 0 3px;
+  cursor: pointer;
+
+  &::after {
+    content: '\22EF';
+    color: $tc-gray-70;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+}

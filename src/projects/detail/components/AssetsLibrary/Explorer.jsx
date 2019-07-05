@@ -97,7 +97,9 @@ class Explorer extends Component {
             }
           </td>
           <td>{renderDate(entry.updatedDate)}</td>
-          <td>...</td>
+          <td>
+            <span styleName="row-menu-btn" />
+          </td>
         </tr>
       )
     })
