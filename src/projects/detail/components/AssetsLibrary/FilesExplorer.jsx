@@ -70,7 +70,16 @@ const FilesExplorer = ({
           isSharingAttachment={isSharingAttachment}
         />
       }
-      <Explorer entries={links} loggedInUser={loggedInUser} useFileIcon />
+      <Explorer
+        forFiles
+        entries={links}
+        loggedInUser={loggedInUser}
+        projectMembers={projectMembers}
+        linkToEdit={linkToEdit}//TODO: continue passing props
+        linkToDelete={linkToDelete}
+        onDelete={this.removeAttachment}
+        onEdit={this.onEditAttachment}
+      />
     </div>
   )
 }

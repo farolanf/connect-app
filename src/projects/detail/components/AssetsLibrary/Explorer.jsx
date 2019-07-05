@@ -4,6 +4,9 @@ import cn from 'classnames'
 import _ from 'lodash'
 import moment from 'moment'
 
+import Dropdown from 'appirio-tech-react-components/components/Dropdown/Dropdown'
+import DropdownItem from 'appirio-tech-react-components/components/Dropdown/DropdownItem'
+
 import './Explorer.scss'
 
 const exts = ['aac', 'ai', 'ase', 'asp', 'aspx', 'avi', 'bmp', 'c++', 'cad', 'cfm', 'cgi', 'csh', 'css', 'csv', 'doc', 'docx', 'eps', 'epub', 'exe', 'flash', 'flv', 'font', 'gif', 'gpx', 'gzip', 'html', 'ics', 'iso', 'jar', 'java', 'jpg', 'js', 'jsp', 'log', 'max', 'md', 'mkv', 'mov', 'mp3', 'mp4', 'mpg', 'obj', 'otf', 'pdf', 'php', 'png', 'pptx', 'psd', 'py', 'rar', 'raw', 'rb', 'rss', 'rtf', 'sketch', 'sql', 'srt', 'svg', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'xlsx', 'xml', 'zip', 'default']
@@ -67,26 +70,27 @@ class Explorer extends Component {
   }
 
   renderEntries(entries) {
-    const { loggedInUser, useFileIcon } = this.props
+    const { loggedInUser, forFiles, forLinks, linkToEdit, linkToDelete, onEditIntent, onDeleteIntent, onEdit, onDelete, projectMembers } = this.props
+    const { path } = this.state
     return entries && entries.map((entry, idx) => {
-      // const onDeleteConfirm = () => {
-      //   onDelete(entry.id)
-      //   onDeleteIntent(-1)
-      // }
-      // const onDeleteCancel = () => onDeleteIntent(-1)
-      // const handleDeleteClick = () => onDeleteIntent(idx)
+      const onDeleteConfirm = () => {
+        onDelete(entry.id)
+        onDeleteIntent(-1)
+      }
+      const onDeleteCancel = () => onDeleteIntent(-1)
+      const handleDeleteClick = () => onDeleteIntent(idx)
 
-      // const onEditConfirm = (title, allowedUsers) => {
-      //   onEdit(entry.id, title, allowedUsers)
-      //   onEditIntent(-1)
-      // }
-      // const onEditCancel = () => onEditIntent(-1)
-      // const handleEditClick = () => onEditIntent(idx)
-      // const canEdit = `${entry.createdBy}` === `${loggedInUser.userId}`
+      const onEditConfirm = (title, allowedUsers) => {
+        onEdit(entry.id, title, allowedUsers)
+        onEditIntent(-1)
+      }
+      const onEditCancel = () => onEditIntent(-1)
+      const handleEditClick = () => onEditIntent(idx)
+      const canEdit = `${entry.createdBy}` === `${loggedInUser.userId}` && !entry.children && !path
       const isFolder = entry.id === -1 || Array.isArray(entry.children)
-      return (
+      return [
         <tr key={idx}>
-          <td>{renderIcon(useFileIcon ? getExt(entry.title) : fileIcon.default)}</td>
+          <td>{renderIcon(forFiles ? getExt(entry.title) : fileIcon.default)}</td>
           <td
             styleName={cn(isFolder && 'folder')}
             onClick={() => isFolder && this.enterFolder(entry)}
@@ -98,10 +102,62 @@ class Explorer extends Component {
           </td>
           <td>{renderDate(entry.updatedDate)}</td>
           <td>
-            <span styleName="row-menu-btn" />
+            {canEdit &&
+              <Dropdown pointerShadow className="drop-down edit-toggle-container">
+                <div className={cn('dropdown-menu-header', 'edit-toggle')} title="Actions">
+                  <div styleName="row-menu-btn" />
+                </div>
+                <div className="dropdown-menu-list down-layer">
+                  <ul styleName="dropdown-menu">
+                    <DropdownItem item={{ label: 'Edit', val: 'edit' }}
+                      onItemClick={handleEditClick}
+                      currentSelection=""
+                    />
+                    <DropdownItem item={{ label: 'Delete', val: 'delete' }}
+                      onItemClick={handleDeleteClick}
+                      currentSelection=""
+                    />
+                  </ul>
+                </div>
+              </Dropdown>
+            }
           </td>
-        </tr>
-      )
+        </tr>,
+        forFiles && linkToEdit === entry.id &&
+          <tr key="edit-file">
+            <EditFileAttachment
+              attachment={entry}
+              projectMembers={projectMembers}
+              loggedInUser={loggedInUser}
+              onCancel={onEditCancel}
+              onConfirm={onEditConfirm}
+            />
+          </tr>,
+        forFiles && linkToDelete === entry.id &&
+          <tr key="delete-file">
+            <DeleteFileLinkModal
+              link={entry}
+              onCancel={onDeleteCancel}
+              onConfirm={onDeleteConfirm}
+            />
+          </tr>,
+        forLinks && linkToEdit === entry.id &&
+        <tr key="edit-link">
+          <EditLinkModal
+            link={ entry }
+            onCancel={ onEditCancel }
+            onConfirm={ onEditConfirm }
+          />
+        </tr>,
+        forLinks && linkToDelete === entry.id &&
+          <tr key="delete-link">
+            <DeleteLinkModal
+              link={ entry }
+              onCancel={ onDeleteCancel }
+              onConfirm={ onDeleteConfirm }
+            />
+          </tr>,
+      ]
     })
   }
 
@@ -131,7 +187,8 @@ class Explorer extends Component {
 Explorer.propTypes = {
   entries: PropTypes.array,
   loggedInUser: PropTypes.object,
-  useFileIcon: PropTypes.bool,
+  forFiles: PropTypes.bool,
+  forLinks: PropTypes.bool,
 }
 
 export default Explorer
