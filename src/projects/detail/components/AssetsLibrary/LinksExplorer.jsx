@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import  { Link } from 'react-router-dom'
+import Modal from 'react-modal'
 
 import Panel from '../../../../components/Panel/Panel'
 import AddLink from '../../../../components/LinksMenu/AddLink'
@@ -13,6 +14,8 @@ import cn from 'classnames'
 import BtnRemove from '../../../../assets/icons/ui-16px-1_trash-simple.svg'
 import BtnEdit from '../../../../assets/icons/icon-edit.svg'
 import Explorer from './Explorer'
+
+import './LinksExplorer.scss'
 
 const LinksExplorer = ({
   canAdd,
@@ -36,7 +39,30 @@ const LinksExplorer = ({
   withHash,
 }) => {
   return (
-    <Explorer entries={links} />
+    <div>
+      <Modal
+        isOpen={isAddingNewLink}
+        onRequestClose={onAddingNewLink}
+        contentLabel="Add Link"
+        overlayClassName="links-explorer__add-link__modal-overlay"
+        className="links-explorer__add-link__modal-content"
+        shouldCloseOnEsc
+        shouldCloseOnOverlayClick
+      >
+        <AddLink
+          onAdd={(link) => {
+            if (link.address.indexOf('http') !== 0)
+              link.address = `http://${link.address}`
+            onAddNewLink(link)
+            onAddingNewLink(false)
+          }}
+          onClose={() => {
+            onAddingNewLink(false)
+          }}
+        />
+      </Modal>
+      <Explorer entries={links} />
+    </div>
   )
 }
 

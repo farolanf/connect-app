@@ -1,0 +1,21 @@
+@import '~tc-ui/src/styles/tc-includes';
+
+:global {
+
+  .links-explorer__add-link__modal-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba($tc-gray-90, .6);
+  }
+
+  .links-explorer__add-link__modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 650px;
+  }
+}

@@ -41,6 +41,7 @@ class AssetsLibrary extends Component {
     super(props)
     this.state = {
       selectedTab: 'files',
+      isAddingNewLink: false,
     }
     this.onChangeStatus = this.onChangeStatus.bind(this)
     this.onDeleteProject = this.onDeleteProject.bind(this)
@@ -60,6 +61,8 @@ class AssetsLibrary extends Component {
     this.extractAttachmentLinksFromPosts = this.extractAttachmentLinksFromPosts.bind(this)
     this.deletePostAttachment = this.deletePostAttachment.bind(this)
     this.openFileUpload = this.openFileUpload.bind(this)
+    this.onClickAddNew = this.onClickAddNew.bind(this)
+    this.onAddingNewLink = this.onAddingNewLink.bind(this)
   }
 
   shouldComponentUpdate(nextProps, nextState) { // eslint-disable-line no-unused-vars
@@ -463,8 +466,21 @@ class AssetsLibrary extends Component {
     return () => this.setState({ selectedTab: tabId })
   }
 
-  render() {
+  onAddingNewLink(value) {
+    this.setState({ isAddingNewLink: value  })
+  }
+
+  onClickAddNew() {
     const { selectedTab } = this.state
+    if (selectedTab === 'files') {
+      this.openFileUpload()
+    } else if (selectedTab === 'links') {
+      this.onAddingNewLink(true)
+    }
+  }
+
+  render() {
+    const { selectedTab, isAddingNewLink } = this.state
     const { project, currentMemberRole, isSuperUser, phases, feeds, isManageUser, phasesTopics, attachmentsAwaitingPermission, addProjectAttachment, discardAttachments, attachmentPermissions, changeAttachmentPermission, projectMembers, loggedInUser, isSharingAttachment, canAccessPrivatePosts } = this.props
     let directLinks = null
     // check if direct links need to be added
@@ -563,7 +579,7 @@ class AssetsLibrary extends Component {
           <h1 styleName="title">Asset Library</h1>
           <button
             className="tc-btn tc-btn-primary tc-btn-sm action-btn"
-            onClick={this.openFileUpload}
+            onClick={this.onClickAddNew}
           >
             Add New...
           </button>
@@ -618,6 +634,8 @@ class AssetsLibrary extends Component {
               onAddNewLink={this.onAddNewLink}
               onDelete={this.onDeleteLink}
               onEdit={this.onEditLink}
+              isAddingNewLink={isAddingNewLink}
+              onAddingNewLink={this.onAddingNewLink}
             />
           }
         </div>
