@@ -15,6 +15,8 @@ import DeleteLinkModal from '../../../../components/LinksMenu/DeleteLinkModal'
 
 import './Explorer.scss'
 
+const folderId = -1
+
 const exts = ['aac', 'ai', 'ase', 'asp', 'aspx', 'avi', 'bmp', 'c++', 'cad', 'cfm', 'cgi', 'csh', 'css', 'csv', 'doc', 'docx', 'eps', 'epub', 'exe', 'flash', 'flv', 'font', 'gif', 'gpx', 'gzip', 'html', 'ics', 'iso', 'jar', 'java', 'jpg', 'js', 'jsp', 'log', 'max', 'md', 'mkv', 'mov', 'mp3', 'mp4', 'mpg', 'obj', 'otf', 'pdf', 'php', 'png', 'pptx', 'psd', 'py', 'rar', 'raw', 'rb', 'rss', 'rtf', 'sketch', 'sql', 'srt', 'svg', 'tif', 'tiff', 'ttf', 'txt', 'wav', 'xlsx', 'xml', 'zip', 'default']
 
 const fileIcon = exts.reduce(
@@ -73,7 +75,7 @@ class Explorer extends Component {
   }
 
   enterFolder(entry) {
-    if (entry.id === -1) return this.goUp()
+    if (entry.id === folderId) return this.goUp()
     const { path } = this.state
     this.setState({ path: [path, entry.id].join('/') })
     this.closeModals()
@@ -84,12 +86,12 @@ class Explorer extends Component {
   }
 
   renderEntries(entries) {
-    const { loggedInUser, forFiles, forLinks, linkToEdit, linkToDelete, onEditIntent, onDeleteIntent, onEdit, onDelete, projectMembers } = this.props
+    const { loggedInUser, forFiles, forLinks, linkToEdit, linkToDelete, onEditIntent, onDeleteIntent, onEdit, onDelete, projectMembers, canManageLinks } = this.props
     const { path } = this.state
     return entries && entries.map(entry => {
       const onDeleteConfirm = () => {
         onDelete(entry.id)
-        onDeleteIntent(-1)
+        onDeleteIntent()
       }
       const onDeleteCancel = () => onDeleteIntent()
       const handleDeleteClick = () => {
@@ -99,15 +101,17 @@ class Explorer extends Component {
 
       const onEditConfirm = (title, allowedUsers) => {
         onEdit(entry.id, title, allowedUsers)
-        onEditIntent(-1)
+        onEditIntent()
       }
       const onEditCancel = () => onEditIntent()
       const handleEditClick = () => {
         this.closeModals()
         onEditIntent(entry.id)
       }
-      const canEdit = `${entry.createdBy}` === `${loggedInUser.userId}` && !entry.children && !path
-      const isFolder = entry.id === -1 || Array.isArray(entry.children)
+      const canEditFiles = forFiles && `${entry.createdBy}` === `${loggedInUser.userId}` && !entry.children && !path
+      const canEditLinks = forLinks && canManageLinks && !entry.children && !path
+      const canEdit = canEditFiles || canEditLinks
+      const isFolder = entry.id === folderId || Array.isArray(entry.children)
       return [
         <tr key={entry.id}>
           <td>{renderIcon(forFiles ? getExt(entry.title) : fileIcon.default)}</td>
@@ -204,7 +208,7 @@ class Explorer extends Component {
           </tr>
         </thead>
         <tbody>
-          {!!path && this.renderEntries([{ title: '..', id: -1 }])}
+          {!!path && this.renderEntries([{ title: '..', id: folderId }])}
           {this.renderEntries(getEntriesOfPath(entries, path))}
         </tbody>
       </table>
@@ -224,6 +228,7 @@ Explorer.propTypes = {
   onDelete: PropTypes.func,
   loggedInUser: PropTypes.object,
   projectMembers: PropTypes.object,
+  canManageLinks: PropTypes.bool,
 }
 
 export default uncontrollable(Explorer, {

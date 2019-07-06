@@ -475,7 +475,7 @@ class AssetsLibrary extends Component {
 
   render() {
     const { selectedTab, isAddingNewLink } = this.state
-    const { project, currentMemberRole, isSuperUser, phases, feeds, isManageUser, phasesTopics, attachmentsAwaitingPermission, addProjectAttachment, updateProjectAttachment, uploadProjectAttachments, removeProjectAttachment, discardAttachments, attachmentPermissions, changeAttachmentPermission, projectMembers, loggedInUser, isSharingAttachment, canAccessPrivatePosts } = this.props
+    const { project, currentMemberRole, isSuperUser, phases, feeds, isManageUser, phasesTopics, attachmentsAwaitingPermission, discardAttachments, attachmentPermissions, changeAttachmentPermission, projectMembers, loggedInUser, isSharingAttachment, canAccessPrivatePosts } = this.props
     let directLinks = null
     // check if direct links need to be added
     const isMemberOrCopilot = _.indexOf([PROJECT_ROLE_COPILOT, PROJECT_ROLE_MANAGER], currentMemberRole) > -1
@@ -627,6 +627,7 @@ class AssetsLibrary extends Component {
               {...{
                 loggedInUser,
                 projectMembers,
+                canManageLinks,
               }}
             />
           }
