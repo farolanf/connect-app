@@ -559,10 +559,9 @@ class AssetsLibrary extends Component {
     links = links.concat(phaseLinks)
 
     // init id for top level links
-    let id = 1
-    links.forEach(link => {
+    links.forEach((link, idx) => {
       if (!link.children) {
-        link.id = id++
+        link.id = idx
       }
     })
 

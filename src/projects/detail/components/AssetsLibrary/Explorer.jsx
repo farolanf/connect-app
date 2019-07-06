@@ -169,7 +169,7 @@ class Explorer extends Component {
               />
             </td>
           </tr>,
-        forLinks && !!linkToEdit && linkToEdit === entry.id &&
+        forLinks && linkToEdit >= 0 && linkToEdit === entry.id &&
         <tr key="edit-link">
           <td colSpan="4">
             <EditLinkModal
@@ -179,7 +179,7 @@ class Explorer extends Component {
             />
           </td>
         </tr>,
-        forLinks && !!linkToDelete && linkToDelete === entry.id &&
+        forLinks && linkToDelete >= 0 && linkToDelete === entry.id &&
           <tr key="delete-link">
             <td colSpan="4">
               <DeleteLinkModal
