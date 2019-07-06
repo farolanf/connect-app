@@ -88,25 +88,32 @@ class Explorer extends Component {
   renderEntries(entries) {
     const { loggedInUser, forFiles, forLinks, linkToEdit, linkToDelete, onEditIntent, onDeleteIntent, onEdit, onDelete, projectMembers, canManageLinks } = this.props
     const { path } = this.state
-    return entries && entries.map(entry => {
+    return entries && entries.map((entry, idx) => {
+      const id = forFiles ? entry.id : idx
       const onDeleteConfirm = () => {
-        onDelete(entry.id)
+        onDelete(id)
         onDeleteIntent()
       }
       const onDeleteCancel = () => onDeleteIntent()
       const handleDeleteClick = () => {
         this.closeModals()
-        onDeleteIntent(entry.id)
+        onDeleteIntent(id)
       }
 
-      const onEditConfirm = (title, allowedUsers) => {
-        onEdit(entry.id, title, allowedUsers)
-        onEditIntent()
-      }
+      const onEditConfirm = forFiles ?
+        (title, allowedUsers) => {
+          onEdit(id, title, allowedUsers)
+          onEditIntent()
+        }
+        :
+        (title, address) => {
+          onEdit(id, title, address)
+          onEditIntent()
+        }
       const onEditCancel = () => onEditIntent()
       const handleEditClick = () => {
         this.closeModals()
-        onEditIntent(entry.id)
+        onEditIntent(id)
       }
       const canEditFiles = forFiles && `${entry.createdBy}` === `${loggedInUser.userId}` && !entry.children && !path
       const canEditLinks = forLinks && canManageLinks && !entry.children && !path
@@ -147,7 +154,7 @@ class Explorer extends Component {
             }
           </td>
         </tr>,
-        forFiles && !!linkToEdit && linkToEdit === entry.id &&
+        forFiles && linkToEdit >= 0 && linkToEdit === id &&
           <tr key="edit-file">
             <td colSpan="4">
               <EditFileAttachment
@@ -159,7 +166,7 @@ class Explorer extends Component {
               />
             </td>
           </tr>,
-        forFiles && !!linkToDelete && linkToDelete === entry.id &&
+        forFiles && linkToDelete >= 0 && linkToDelete === id &&
           <tr key="delete-file">
             <td colSpan="4">
               <DeleteFileLinkModal
@@ -169,7 +176,7 @@ class Explorer extends Component {
               />
             </td>
           </tr>,
-        forLinks && linkToEdit >= 0 && linkToEdit === entry.id &&
+        forLinks && linkToEdit >= 0 && linkToEdit === id &&
         <tr key="edit-link">
           <td colSpan="4">
             <EditLinkModal
@@ -179,7 +186,7 @@ class Explorer extends Component {
             />
           </td>
         </tr>,
-        forLinks && linkToDelete >= 0 && linkToDelete === entry.id &&
+        forLinks && linkToDelete >= 0 && linkToDelete === id &&
           <tr key="delete-link">
             <td colSpan="4">
               <DeleteLinkModal

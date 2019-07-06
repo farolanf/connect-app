@@ -558,22 +558,12 @@ class AssetsLibrary extends Component {
     }
     links = links.concat(phaseLinks)
 
-    // init id for top level links
-    links.forEach((link, idx) => {
-      if (!link.children) {
-        link.id = idx
-      }
-    })
-
     // extract attachment from posts
     attachments = [
       ...attachments,
       ...this.extractAttachmentLinksFromPosts(feeds),
       ...this.extractAttachmentLinksFromPosts(phaseFeeds)
     ]
-
-    console.log('attachments', attachments)
-    console.log('links', links)
 
     return (
       <div styleName="root">
