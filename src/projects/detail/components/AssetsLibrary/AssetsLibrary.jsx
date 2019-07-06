@@ -2,11 +2,12 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import cn from 'classnames'
 import * as filepicker from 'filestack-js'
-import uncontrollable from 'uncontrollable'
 import update from 'react-addons-update'
+import Modal from 'react-modal'
 
-import FilesExplorer from './FilesExplorer'
-import LinksExplorer from './LinksExplorer'
+import AddFilePermission from '../../../../components/FileList/AddFilePermissions'
+import AddLink from '../../../../components/LinksMenu/AddLink'
+import Explorer from './Explorer'
 import './AssetsLibrary.scss'
 
 import {
@@ -63,6 +64,7 @@ class AssetsLibrary extends Component {
     this.openFileUpload = this.openFileUpload.bind(this)
     this.onClickAddNew = this.onClickAddNew.bind(this)
     this.onAddingNewLink = this.onAddingNewLink.bind(this)
+    this.onAddingAttachmentPermissions = this.onAddingAttachmentPermissions.bind(this)
   }
 
   shouldComponentUpdate(nextProps, nextState) { // eslint-disable-line no-unused-vars
@@ -403,9 +405,7 @@ class AssetsLibrary extends Component {
   }
 
   processUploadedFiles(fpFiles, category) {
-    const { onAddingNewLink } = this.props
     const attachments = []
-    onAddingNewLink(false)
     fpFiles = _.isArray(fpFiles) ? fpFiles : [fpFiles]
     _.forEach(fpFiles, f => {
       const attachment = {
@@ -434,7 +434,7 @@ class AssetsLibrary extends Component {
   }
 
   openFileUpload() {
-    const { project, onAddingNewLink, category } = this.props
+    const { project, category } = this.props
     const attachmentsStorePath = `${PROJECT_ATTACHMENTS_FOLDER}/${project.id}/`
     if (fileUploadClient) {
       const picker = fileUploadClient.picker({
@@ -449,12 +449,6 @@ class AssetsLibrary extends Component {
         uploadInBackground: false,
         onFileUploadFinished: (files) => {
           this.processUploadedFiles(files, category)
-        },
-        onOpen: () => {
-          onAddingNewLink(true)
-        },
-        onClose: () => {
-          onAddingNewLink(false)
         }
       })
 
@@ -481,7 +475,7 @@ class AssetsLibrary extends Component {
 
   render() {
     const { selectedTab, isAddingNewLink } = this.state
-    const { project, currentMemberRole, isSuperUser, phases, feeds, isManageUser, phasesTopics, attachmentsAwaitingPermission, addProjectAttachment, discardAttachments, attachmentPermissions, changeAttachmentPermission, projectMembers, loggedInUser, isSharingAttachment, canAccessPrivatePosts } = this.props
+    const { project, currentMemberRole, isSuperUser, phases, feeds, isManageUser, phasesTopics, attachmentsAwaitingPermission, addProjectAttachment, updateProjectAttachment, uploadProjectAttachments, removeProjectAttachment, discardAttachments, attachmentPermissions, changeAttachmentPermission, projectMembers, loggedInUser, isSharingAttachment, canAccessPrivatePosts } = this.props
     let directLinks = null
     // check if direct links need to be added
     const isMemberOrCopilot = _.indexOf([PROJECT_ROLE_COPILOT, PROJECT_ROLE_MANAGER], currentMemberRole) > -1
@@ -550,8 +544,6 @@ class AssetsLibrary extends Component {
       })
     )
 
-    const attachmentsStorePath = `${PROJECT_ATTACHMENTS_FOLDER}/${project.id}/`
-
     // extract links from posts
     const topicLinks = this.extractLinksFromPosts(feeds)
     const publicTopicLinks = topicLinks.filter(link => link.tag !== PROJECT_FEED_TYPE_MESSAGES)
@@ -566,12 +558,23 @@ class AssetsLibrary extends Component {
     }
     links = links.concat(phaseLinks)
 
+    // init id for top level links
+    let id = 1
+    links.forEach(link => {
+      if (!link.children) {
+        link.id = id++
+      }
+    })
+
     // extract attachment from posts
     attachments = [
       ...attachments,
       ...this.extractAttachmentLinksFromPosts(feeds),
       ...this.extractAttachmentLinksFromPosts(phaseFeeds)
     ]
+
+    console.log('attachments', attachments)
+    console.log('links', links)
 
     return (
       <div styleName="root">
@@ -604,41 +607,61 @@ class AssetsLibrary extends Component {
         </h2>
         <div styleName="section">
           {selectedTab === 'files' &&
-            <FilesExplorer
-              links={attachments}
-              title="Files"
-              onDelete={this.removeAttachment}
+            <Explorer
+              forFiles
+              entries={attachments}
               onEdit={this.onEditAttachment}
-              onAddNewLink={this.onAddFile}
-              onAddAttachment={addProjectAttachment}
-              onUploadAttachment={this.onUploadAttachment}
-              isSharingAttachment={isSharingAttachment}
-              discardAttachments={discardAttachments}
-              onChangePermissions={changeAttachmentPermission}
-              selectedUsers={attachmentPermissions}
-              projectMembers={projectMembers}
-              pendingAttachments={attachmentsAwaitingPermission}
-              loggedInUser={loggedInUser}
-              moreText="view all files"
-              noDots
-              attachmentsStorePath={attachmentsStorePath}
-              onDeletePostAttachment={this.deletePostAttachment}
+              onDelete={this.removeAttachment}
+              {...{
+                loggedInUser,
+                projectMembers,
+              }}
             />
           }
           {selectedTab === 'links' &&
-            <LinksExplorer
-              links={links}
-              canDelete={canManageLinks}
-              canEdit={canManageLinks}
-              canAdd={canManageLinks}
-              onAddNewLink={this.onAddNewLink}
-              onDelete={this.onDeleteLink}
+            <Explorer
+              forLinks
+              entries={links}
               onEdit={this.onEditLink}
-              isAddingNewLink={isAddingNewLink}
-              onAddingNewLink={this.onAddingNewLink}
+              onDelete={this.onDeleteLink}
+              {...{
+                loggedInUser,
+                projectMembers,
+              }}
             />
           }
         </div>
+        {attachmentsAwaitingPermission &&
+          <AddFilePermission onCancel={discardAttachments}
+            onSubmit={this.onAddingAttachmentPermissions}
+            onChange={changeAttachmentPermission}
+            selectedUsers={attachmentPermissions}
+            projectMembers={projectMembers}
+            loggedInUser={loggedInUser}
+            isSharingAttachment={isSharingAttachment}
+          />
+        }
+        <Modal
+          isOpen={isAddingNewLink}
+          onRequestClose={this.onAddingNewLink}
+          contentLabel="Add Link"
+          overlayClassName="links-explorer__add-link__modal-overlay"
+          className="links-explorer__add-link__modal-content"
+          shouldCloseOnEsc
+          shouldCloseOnOverlayClick
+        >
+          <AddLink
+            onAdd={(link) => {
+              if (link.address.indexOf('http') !== 0)
+                link.address = `http://${link.address}`
+              this.onAddNewLink(link)
+              this.onAddingNewLink(false)
+            }}
+            onClose={() => {
+              this.onAddingNewLink(false)
+            }}
+          />
+        </Modal>
       </div>
     )
   }
@@ -650,10 +673,4 @@ AssetsLibrary.propTypes = {
   uploadProjectAttachments: PropTypes.func.isRequired,
 }
 
-export default uncontrollable(AssetsLibrary, {
-  linkToDelete: 'onDeleteIntent',
-  linkToEdit: 'onEditIntent',
-  isAddingNewLink: 'onAddingNewLink',
-  isAddingNewFile: 'isAddingNewFile',
-  limit: 'onChangeLimit'
-})
+export default AssetsLibrary

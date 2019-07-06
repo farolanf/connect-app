@@ -3,9 +3,15 @@ import PropTypes from 'prop-types'
 import cn from 'classnames'
 import _ from 'lodash'
 import moment from 'moment'
+import uncontrollable from 'uncontrollable'
 
 import Dropdown from 'appirio-tech-react-components/components/Dropdown/Dropdown'
 import DropdownItem from 'appirio-tech-react-components/components/Dropdown/DropdownItem'
+
+import EditFileAttachment from '../../../../components/LinksMenu/EditFileAttachment'
+import DeleteFileLinkModal from '../../../../components/LinksMenu/DeleteFileLinkModal'
+import EditLinkModal from '../../../../components/LinksMenu/EditLinkModal'
+import DeleteLinkModal from '../../../../components/LinksMenu/DeleteLinkModal'
 
 import './Explorer.scss'
 
@@ -53,16 +59,24 @@ class Explorer extends Component {
     this.onClickFolder = this.onClickFolder.bind(this)
   }
 
+  closeModals() {
+    const { onEditIntent, onDeleteIntent } = this.props
+    onEditIntent()
+    onDeleteIntent()
+  }
+
   goUp() {
     const { path } = this.state
     const newPath = path.substring(0, path.lastIndexOf('/'))
     this.setState({ path: newPath })
+    this.closeModals()
   }
 
   enterFolder(entry) {
     if (entry.id === -1) return this.goUp()
     const { path } = this.state
     this.setState({ path: [path, entry.id].join('/') })
+    this.closeModals()
   }
 
   onClickFolder() {
@@ -72,24 +86,30 @@ class Explorer extends Component {
   renderEntries(entries) {
     const { loggedInUser, forFiles, forLinks, linkToEdit, linkToDelete, onEditIntent, onDeleteIntent, onEdit, onDelete, projectMembers } = this.props
     const { path } = this.state
-    return entries && entries.map((entry, idx) => {
+    return entries && entries.map(entry => {
       const onDeleteConfirm = () => {
         onDelete(entry.id)
         onDeleteIntent(-1)
       }
-      const onDeleteCancel = () => onDeleteIntent(-1)
-      const handleDeleteClick = () => onDeleteIntent(idx)
+      const onDeleteCancel = () => onDeleteIntent()
+      const handleDeleteClick = () => {
+        this.closeModals()
+        onDeleteIntent(entry.id)
+      }
 
       const onEditConfirm = (title, allowedUsers) => {
         onEdit(entry.id, title, allowedUsers)
         onEditIntent(-1)
       }
-      const onEditCancel = () => onEditIntent(-1)
-      const handleEditClick = () => onEditIntent(idx)
+      const onEditCancel = () => onEditIntent()
+      const handleEditClick = () => {
+        this.closeModals()
+        onEditIntent(entry.id)
+      }
       const canEdit = `${entry.createdBy}` === `${loggedInUser.userId}` && !entry.children && !path
       const isFolder = entry.id === -1 || Array.isArray(entry.children)
       return [
-        <tr key={idx}>
+        <tr key={entry.id}>
           <td>{renderIcon(forFiles ? getExt(entry.title) : fileIcon.default)}</td>
           <td
             styleName={cn(isFolder && 'folder')}
@@ -123,39 +143,47 @@ class Explorer extends Component {
             }
           </td>
         </tr>,
-        forFiles && linkToEdit === entry.id &&
+        forFiles && !!linkToEdit && linkToEdit === entry.id &&
           <tr key="edit-file">
-            <EditFileAttachment
-              attachment={entry}
-              projectMembers={projectMembers}
-              loggedInUser={loggedInUser}
-              onCancel={onEditCancel}
-              onConfirm={onEditConfirm}
-            />
+            <td colSpan="4">
+              <EditFileAttachment
+                attachment={entry}
+                projectMembers={projectMembers}
+                loggedInUser={loggedInUser}
+                onCancel={onEditCancel}
+                onConfirm={onEditConfirm}
+              />
+            </td>
           </tr>,
-        forFiles && linkToDelete === entry.id &&
+        forFiles && !!linkToDelete && linkToDelete === entry.id &&
           <tr key="delete-file">
-            <DeleteFileLinkModal
-              link={entry}
-              onCancel={onDeleteCancel}
-              onConfirm={onDeleteConfirm}
-            />
+            <td colSpan="4">
+              <DeleteFileLinkModal
+                link={entry}
+                onCancel={onDeleteCancel}
+                onConfirm={onDeleteConfirm}
+              />
+            </td>
           </tr>,
-        forLinks && linkToEdit === entry.id &&
+        forLinks && !!linkToEdit && linkToEdit === entry.id &&
         <tr key="edit-link">
-          <EditLinkModal
-            link={ entry }
-            onCancel={ onEditCancel }
-            onConfirm={ onEditConfirm }
-          />
-        </tr>,
-        forLinks && linkToDelete === entry.id &&
-          <tr key="delete-link">
-            <DeleteLinkModal
+          <td colSpan="4">
+            <EditLinkModal
               link={ entry }
-              onCancel={ onDeleteCancel }
-              onConfirm={ onDeleteConfirm }
+              onCancel={ onEditCancel }
+              onConfirm={ onEditConfirm }
             />
+          </td>
+        </tr>,
+        forLinks && !!linkToDelete && linkToDelete === entry.id &&
+          <tr key="delete-link">
+            <td colSpan="4">
+              <DeleteLinkModal
+                link={ entry }
+                onCancel={ onDeleteCancel }
+                onConfirm={ onDeleteConfirm }
+              />
+            </td>
           </tr>,
       ]
     })
@@ -185,10 +213,23 @@ class Explorer extends Component {
 }
 
 Explorer.propTypes = {
-  entries: PropTypes.array,
-  loggedInUser: PropTypes.object,
   forFiles: PropTypes.bool,
   forLinks: PropTypes.bool,
+  entries: PropTypes.array,
+  linkToEdit: PropTypes.number,
+  linkToDelete: PropTypes.number,
+  onEditIntent: PropTypes.func,
+  onDeleteIntent: PropTypes.func,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  loggedInUser: PropTypes.object,
+  projectMembers: PropTypes.object,
 }
 
-export default Explorer
+export default uncontrollable(Explorer, {
+  linkToDelete: 'onDeleteIntent',
+  linkToEdit: 'onEditIntent',
+  isAddingNewLink: 'onAddingNewLink',
+  isAddingNewFile: 'isAddingNewFile',
+  limit: 'onChangeLimit'
+})
